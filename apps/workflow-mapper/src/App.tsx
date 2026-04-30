@@ -1,44 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
+import { AGENTS, agentById } from "./agentCatalog";
 
 /* ── DATA ── */
-const AGENTS = [
-  { id:"orchestrator",  name:"Zynx Orchestrator",   role:"Master coordinator",       cat:"core",   color:"#7F77DD", dur:2 },
-  { id:"task-planner",  name:"Task Planner",         role:"Job decomposer",           cat:"core",   color:"#7F77DD", dur:3 },
-  { id:"router",        name:"LLM Router",           role:"Model selector",           cat:"core",   color:"#7F77DD", dur:1 },
-  { id:"memory",        name:"Memory Manager",       role:"Context store",            cat:"core",   color:"#7F77DD", dur:2 },
-  { id:"scheduler",     name:"Job Scheduler",        role:"Cron & queue manager",     cat:"core",   color:"#7F77DD", dur:2 },
-  { id:"auth",          name:"Auth Guard",           role:"JWT / RBAC enforcement",   cat:"core",   color:"#7F77DD", dur:1 },
-  { id:"deeja",         name:"Deeja",                role:"Thai UI agent",            cat:"ui",     color:"#1D9E75", dur:3 },
-  { id:"dashboard-ui",  name:"Dashboard Agent",      role:"Renders master dashboard", cat:"ui",     color:"#1D9E75", dur:4 },
-  { id:"form-builder",  name:"Form Builder",         role:"Dynamic form generator",   cat:"ui",     color:"#1D9E75", dur:3 },
-  { id:"chat-ui",       name:"Chat Interface",       role:"Conversational UI layer",  cat:"ui",     color:"#1D9E75", dur:2 },
-  { id:"data-ingest",   name:"Data Ingestion",       role:"ETL pipeline",             cat:"data",   color:"#378ADD", dur:5 },
-  { id:"validator",     name:"Schema Validator",     role:"Zod / JSON Schema check",  cat:"data",   color:"#378ADD", dur:2 },
-  { id:"transformer",   name:"Data Transformer",     role:"Shape & map payloads",     cat:"data",   color:"#378ADD", dur:3 },
-  { id:"vector-store",  name:"Vector Store",         role:"Embedding & retrieval",    cat:"data",   color:"#378ADD", dur:4 },
-  { id:"db-agent",      name:"DB Agent",             role:"PostgreSQL / multi-tenant",cat:"data",   color:"#378ADD", dur:3 },
-  { id:"cache",         name:"Cache Agent",          role:"Redis layer",              cat:"data",   color:"#378ADD", dur:1 },
-  { id:"code-gen",      name:"Code Generator",       role:"TypeScript / Python",      cat:"worker", color:"#3B6D11", dur:6 },
-  { id:"doc-writer",    name:"Doc Writer",           role:"OpenAPI / Markdown",       cat:"worker", color:"#3B6D11", dur:4 },
-  { id:"reviewer",      name:"Code Reviewer",        role:"Quality & lint check",     cat:"worker", color:"#3B6D11", dur:3 },
-  { id:"test-gen",      name:"Test Generator",       role:"Unit & integration tests", cat:"worker", color:"#3B6D11", dur:4 },
-  { id:"refactor",      name:"Refactor Agent",       role:"Code improvement",         cat:"worker", color:"#3B6D11", dur:3 },
-  { id:"api-builder",   name:"API Builder",          role:"REST / GraphQL scaffolder",cat:"worker", color:"#3B6D11", dur:5 },
-  { id:"prompt-eng",    name:"Prompt Engineer",      role:"Prompt optimization",      cat:"worker", color:"#3B6D11", dur:2 },
-  { id:"rag-agent",     name:"RAG Agent",            role:"Retrieval-augmented gen",  cat:"worker", color:"#3B6D11", dur:4 },
-  { id:"sales-bot",     name:"Sales Bot",            role:"CRM & lead scoring",       cat:"biz",    color:"#D85A30", dur:4 },
-  { id:"hr-agent",      name:"HR Agent",             role:"Recruitment & onboarding", cat:"biz",    color:"#D85A30", dur:5 },
-  { id:"finance-agent", name:"Finance Agent",        role:"Invoicing & reporting",    cat:"biz",    color:"#D85A30", dur:4 },
-  { id:"ops-agent",     name:"Ops Agent",            role:"Infra & deployment ops",   cat:"biz",    color:"#D85A30", dur:3 },
-  { id:"marketing",     name:"Marketing Agent",      role:"Campaign automation",      cat:"biz",    color:"#D85A30", dur:5 },
-  { id:"support-bot",   name:"Support Bot",          role:"Customer helpdesk",        cat:"biz",    color:"#D85A30", dur:3 },
-  { id:"touchscreen",   name:"Touchscreen Operator", role:"Kiosk / POS interface",    cat:"biz",    color:"#D85A30", dur:2 },
-  { id:"notifier",      name:"Notifier",             role:"Slack / email / LINE",     cat:"output", color:"#185FA5", dur:1 },
-  { id:"logger",        name:"Logger",               role:"Audit trail",              cat:"output", color:"#5F5E5A", dur:1 },
-  { id:"report-gen",    name:"Report Generator",     role:"PDF / Excel output",       cat:"output", color:"#185FA5", dur:3 },
-  { id:"webhook",       name:"Webhook Dispatcher",   role:"External event push",      cat:"output", color:"#185FA5", dur:1 },
-];
-
 const PRESETS = [
   { id:"w1", name:"Code Generation",  color:"#7F77DD", steps:["orchestrator","task-planner","router","code-gen","test-gen","reviewer","notifier"] },
   { id:"w2", name:"Data Validation",  color:"#378ADD", steps:["orchestrator","data-ingest","transformer","validator","db-agent","logger"] },
@@ -58,7 +21,6 @@ const CAT_META = {
   output: { label:"Output",   color:"#185FA5" },
 };
 const CAT_ORDER = ["core","ui","data","worker","biz","output"];
-const agentById = id => AGENTS.find(a => a.id === id);
 
 /* ── STORAGE HELPERS ── */
 const STORE_KEY = "zynx_wf_saved";

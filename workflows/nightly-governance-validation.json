@@ -87,6 +87,116 @@
         "category": "output",
         "estimatedDuration": 1
       }
-    ]
+    ],
+    "flow": {
+      "nodes": [
+        {
+          "id": "orchestrator",
+          "type": "agent",
+          "label": "Zynx Orchestrator",
+          "role": "Master coordinator",
+          "category": "core",
+          "estimatedDuration": 2
+        },
+        {
+          "id": "data-ingest",
+          "type": "agent",
+          "label": "Data Ingestion",
+          "role": "Load manifest, repository visibility, and governance files",
+          "category": "data",
+          "estimatedDuration": 5
+        },
+        {
+          "id": "validator",
+          "type": "agent",
+          "label": "Schema Validator",
+          "role": "Validate required files, enums, and report structure",
+          "category": "data",
+          "estimatedDuration": 2
+        },
+        {
+          "id": "transformer",
+          "type": "agent",
+          "label": "Data Transformer",
+          "role": "Normalize repository deltas and proposed manifest rows",
+          "category": "data",
+          "estimatedDuration": 3
+        },
+        {
+          "id": "db-agent",
+          "type": "agent",
+          "label": "DB Agent",
+          "role": "Persist reviewed governance state when approved",
+          "category": "data",
+          "estimatedDuration": 3
+        },
+        {
+          "id": "reviewer",
+          "type": "agent",
+          "label": "Code Reviewer",
+          "role": "Check evidence quality and non-destructive safety gates",
+          "category": "worker",
+          "estimatedDuration": 3
+        },
+        {
+          "id": "report-gen",
+          "type": "agent",
+          "label": "Report Generator",
+          "role": "Create daily governance report from template",
+          "category": "output",
+          "estimatedDuration": 3
+        },
+        {
+          "id": "notifier",
+          "type": "agent",
+          "label": "Notifier",
+          "role": "Notify human reviewer when approval is required",
+          "category": "output",
+          "estimatedDuration": 1
+        },
+        {
+          "id": "logger",
+          "type": "agent",
+          "label": "Logger",
+          "role": "Append audit trail and decision log entries",
+          "category": "output",
+          "estimatedDuration": 1
+        }
+      ],
+      "edges": [
+        {
+          "source": "orchestrator",
+          "target": "data-ingest"
+        },
+        {
+          "source": "data-ingest",
+          "target": "validator"
+        },
+        {
+          "source": "validator",
+          "target": "transformer"
+        },
+        {
+          "source": "transformer",
+          "target": "db-agent"
+        },
+        {
+          "source": "db-agent",
+          "target": "reviewer"
+        },
+        {
+          "source": "reviewer",
+          "target": "report-gen"
+        },
+        {
+          "source": "report-gen",
+          "target": "notifier"
+        },
+        {
+          "source": "notifier",
+          "target": "logger"
+        }
+      ]
+    }
   }
 }

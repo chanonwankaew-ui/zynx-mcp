@@ -2,6 +2,10 @@
 
 Project root: `/Users/kant/zynx-mcp`
 
+Canonical Zynx workflow/MCP repository: `/Users/kant/zynx-mcp`
+
+`/Users/kant/zynx-flow` is reference-only. Do not add new production workflow features there; migrate useful ideas into `zynx-mcp`.
+
 ## Project Context
 
 This repo is the production-oriented Zynx MCP workspace.
@@ -117,7 +121,7 @@ Preserve existing MCP tool names unless explicitly asked to rename them:
 - `get_agent_health`
 - `list_agents`
 
-Keep Planner agent IDs aligned with `src/agentRegistry.ts`; executor route mapping depends on that registry.
+Keep Planner agent IDs aligned with `src/agentRegistry.ts`; executor route mapping depends on that registry. The Planner UI imports its agent catalog from the shared registry and must not define a second 35-agent list.
 
 Keep Deeja/Zynx terminology intact, including Thai product language.
 

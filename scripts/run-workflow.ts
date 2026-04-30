@@ -17,6 +17,10 @@ type WorkflowFile = {
     name?: string;
     goal?: string;
     agents?: WorkflowAgent[];
+    flow?: {
+      nodes?: FlowNode[];
+      edges?: FlowEdge[];
+    };
   };
 };
 
@@ -76,6 +80,16 @@ function buildFlow(agents: WorkflowAgent[]) {
   }));
 
   return { nodes, edges };
+}
+
+function resolveFlow(workflow: NonNullable<WorkflowFile["workflow"]>, agents: WorkflowAgent[]) {
+  const nodes = workflow.flow?.nodes;
+  const edges = workflow.flow?.edges;
+  if (Array.isArray(nodes) && nodes.length > 0 && Array.isArray(edges)) {
+    return { nodes, edges, source: "workflow.flow" };
+  }
+
+  return { ...buildFlow(agents), source: "generated-from-agents" };
 }
 
 function serviceHeaders() {
@@ -155,7 +169,11 @@ async function main() {
   }
 
   const workflowId = slug(workflow.id ?? workflow.name ?? path.basename(workflowPath, ".json"));
-  const flow = buildFlow(agents);
+  const flowResult = resolveFlow(workflow, agents);
+  const flow = {
+    nodes: flowResult.nodes,
+    edges: flowResult.edges
+  };
   const now = new Date();
   const dateId = now.toISOString().slice(0, 10);
 
@@ -226,6 +244,7 @@ async function main() {
     createdAt: now.toISOString(),
     durationUnits: cursor,
     contextPassing: "sequential",
+    flowSource: flowResult.source,
     routeMap: AGENT_REGISTRY.map(agent => ({
       agentId: agent.id,
       mcpTool: agent.mcpTool,

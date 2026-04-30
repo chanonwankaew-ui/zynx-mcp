@@ -2,6 +2,8 @@
 
 Production-oriented workspace for the Zynx MCP wrapper, local agent backend, Agentic Workflow Planner, and blueprint explorer tooling.
 
+`/Users/kant/zynx-mcp` is the canonical repository for Zynx workflow/MCP work. Older workflow experiments such as `/Users/kant/zynx-flow` are reference-only unless a feature is intentionally migrated into this repo.
+
 # Repository Status
 
 * Status: ACTIVE
@@ -11,7 +13,7 @@ Production-oriented workspace for the Zynx MCP wrapper, local agent backend, Age
 * Canonical Repo: zynx-mcp
 * Related Repos: ZynxAGI-Project; zynx-flow
 * Purpose: Master governance index and MCP workflow execution workspace
-* Notes: Local repository index for nightly governance and classification records
+* Notes: Canonical workspace for Planner UI, MCP backend routing, workflow execution, reports, and nightly governance records
 
 ## Structure
 
@@ -186,12 +188,24 @@ Executor output is written to:
 reports/workflow-runs/
 ```
 
-The executor converts Planner agent order into `flow.nodes` and `flow.edges`, passes context sequentially, and writes a human-reviewable run report. In dry-run mode it only validates routes. In execute mode it calls `POST /agents/:agentId/invoke` for each mapped agent.
+The executor reads Planner `flow.nodes` and `flow.edges` when present. For older workflow files, it falls back to generating a sequential flow from `workflow.agents`. It then passes context sequentially and writes a human-reviewable run report. In dry-run mode it only validates routes. In execute mode it calls `POST /agents/:agentId/invoke` for each mapped agent.
 
 Agent route mappings are defined in:
 
 ```text
 src/agentRegistry.ts
+```
+
+Agent definitions in `src/agentRegistry.ts` are the source of truth for both backend routing and the Planner UI catalog. The UI should not maintain a separate agent list.
+
+## zynx-flow Status
+
+`/Users/kant/zynx-flow` is archived as a reference for the earlier node/edge workflow-builder experiment. The useful concept has been absorbed here as Planner `flow.nodes` / `flow.edges` plus `scripts/run-workflow.ts`.
+
+Reference note:
+
+```text
+docs/references/zynx-flow-reference.md
 ```
 
 ## Developer Mode Artifacts
