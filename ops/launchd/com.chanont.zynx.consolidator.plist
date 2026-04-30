@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.chanont.zynx.consolidator</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>/Users/kant/Documents/Zynx/00_INDEX/Consolidation_v3/organize_zynx_v3.sh</string>
+        <string>--all</string>
+        <string>--run</string>
+    </array>
+
+    <!-- รันทุกวันเวลา 00:00 (เที่ยงคืน) -->
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Hour</key>
+        <integer>0</integer>
+        <key>Minute</key>
+        <integer>0</integer>
+    </dict>
+
+    <!-- Log output -->
+    <key>StandardOutPath</key>
+    <string>/Users/kant/Documents/Zynx/00_INDEX/auto_run_stdout.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/kant/Documents/Zynx/00_INDEX/auto_run_stderr.log</string>
+
+    <!-- ให้เจอ rclone, git, gh จาก Homebrew -->
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+        <key>HOME</key>
+        <string>/Users/kant</string>
+    </dict>
+
+    <!-- ถ้าเครื่องปิดอยู่ตอนเที่ยงคืน → รันทันทีที่เปิดเครื่อง -->
+    <key>StartOnMount</key>
+    <false/>
+    <key>RunAtLoad</key>
+    <false/>
+
+    <!-- ถ้าเครื่อง sleep → รันรอบที่ผ่านมา -->
+    <key>AbandonProcessGroup</key>
+    <true/>
+</dict>
+</plist>

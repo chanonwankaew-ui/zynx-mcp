@@ -1,0 +1,31 @@
+:root {
+  --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --color-text-primary: #1f2523;
+  --color-text-secondary: #65716d;
+  --color-text-info: #185fa5;
+  --color-background-primary: #ffffff;
+  --color-background-secondary: #f5f7f6;
+  --color-background-info: #e9f2fb;
+  --color-border-primary: #7b8580;
+  --color-border-secondary: #c9d0cc;
+  --color-border-tertiary: #e0e5e2;
+  --color-border-info: #185fa5;
+  --border-radius-md: 6px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background: #f8faf9;
+  font-family: var(--font-sans);
+}
+
+button,
+input {
+  font: inherit;
+}

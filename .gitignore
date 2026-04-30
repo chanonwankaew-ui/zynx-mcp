@@ -1,0 +1,31 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# Build output
+dist/
+**/dist/
+build/
+**/build/
+**/.build/
+**/bin/
+**/obj/
+
+# Local tooling
+.codex/
+.vscode/
+CLAUDE.local.md
+
+# Local SDKs and generated bundles
+oracleJdk-26.jdk/
+*.app/
+
+# Logs and OS files
+*.log
+.DS_Store
+**/.DS_Store

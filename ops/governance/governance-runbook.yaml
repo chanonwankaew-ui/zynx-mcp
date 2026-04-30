@@ -1,0 +1,184 @@
+version: "1.0"
+name: "zynx-daily-repo-governance"
+
+schedule:
+  cron: "0 0 * * *"
+  timezone: "LOCAL"
+
+policy:
+  evidence_rules:
+    - "Never claim creation/completion without exact evidence."
+    - "Accepted evidence: repo_name, branch, commit_sha, pr_number, file_path."
+    - "If evidence is missing, mark item as unverifiable."
+  safety_rules:
+    - "Never delete repositories automatically."
+    - "Prefer classify/document/recommend/archive over destructive action."
+    - "If duplicate analysis is uncertain, use REVIEW_MANUALLY."
+    - "Treat generated patches as proposed unless verified as applied."
+  approvals_required:
+    - "Human approval before merging duplicate repositories."
+    - "Human approval before repository deletion."
+    - "Human approval when duplicate analysis is inconclusive."
+
+allowed_values:
+  duplicate_outcomes:
+    - KEEP_AS_SHOWCASE
+    - KEEP_AS_EXPERIMENT
+    - MARK_AS_MERGED
+    - ARCHIVE
+    - REVIEW_MANUALLY
+  status:
+    - ACTIVE
+    - INCUBATING
+    - DEPRECATED
+    - ARCHIVED
+    - UNKNOWN
+    - REVIEW_REQUIRED
+    - MISSING_FROM_VISIBILITY
+  type:
+    - APP
+    - SERVICE
+    - LIBRARY
+    - TOOLING
+    - DOCS
+    - INFRA
+    - DATA
+    - EXPERIMENT
+    - TEMPLATE
+    - UNKNOWN
+  group:
+    - ZYNX_CORE
+    - ZYNX_APPS
+    - ZYNX_INFRA
+    - ZYNX_DOCS
+    - ZYNX_RESEARCH
+    - ZYNX_EXPERIMENTS
+    - THIRD_PARTY
+    - UNKNOWN
+  next_action:
+    - KEEP
+    - CLASSIFY
+    - DOCUMENT
+    - CONSOLIDATE
+    - PROPOSE_ARCHIVE
+    - REVIEW_MANUALLY
+    - VERIFY_EVIDENCE
+    - ADD_README_STATUS
+    - UPDATE_MANIFEST
+
+governance_files:
+  required:
+    - README.md
+    - repo-manifest.csv
+    - governance-policy.md
+    - decision-log.md
+    - duplicate-analysis.md
+    - roadmap.md
+    - daily-governance-log.md
+  core_read_order:
+    - repo-manifest.csv
+    - decision-log.md
+    - duplicate-analysis.md
+    - daily-governance-log.md
+
+states:
+  repository:
+    - "Unclassified"
+    - "Classified"
+    - "UnknownCanonical"
+    - "CanonicalMapped"
+    - "ComplianceGapFound"
+    - "PatchProposed"
+    - "PotentialDuplicate"
+    - "DuplicateFamilyAnalyzed"
+    - "UncertainDuplicate"
+    - "ReviewManually"
+    - "MissingFromCurrentVisibility"
+  run:
+    - "Scheduled"
+    - "Running"
+    - "BlockedMissingIndex"
+    - "PartialCompletion"
+    - "ReportGenerated"
+
+workflow:
+  - id: identify_master_index
+    action: "Detect and validate master index repository access."
+    on_failure:
+      set_run_state: "BlockedMissingIndex"
+      emit_initialization_files: true
+      skip_remaining_steps: true
+
+  - id: load_governance_state
+    action: "Read current governance files in core_read_order."
+    record_missing_files: true
+
+  - id: discover_changes
+    action: "Build visible repository list and compare with manifest."
+    outputs:
+      - new_repositories
+      - probable_renames
+      - missing_from_manifest
+      - missing_from_visibility
+    constraints:
+      - "Mark rename only with direct supporting evidence."
+      - "Mark inaccessible repos as unverifiable."
+
+  - id: classify_repositories
+    action: "Classify each new/unclassified repository."
+    required_fields:
+      - status
+      - type
+      - group
+      - canonical_repo
+      - purpose
+      - next_action
+      - notes
+    constraints:
+      - "Exactly one status/type/group per repository."
+      - "Only allowed values."
+
+  - id: analyze_duplicates
+    action: "Detect duplicate families and assign one allowed outcome."
+    families:
+      - hash_suffix
+      - numbered
+      - generated
+      - starter_template
+      - playground
+      - explainer
+      - deeja
+      - infra
+      - docs_overlap
+    constraints:
+      - "If uncertain, set REVIEW_MANUALLY."
+      - "If deletable candidate, recommend ARCHIVE first."
+
+  - id: compliance_check
+    action: "Verify governance completeness per repository."
+    checks:
+      - "status/type/group present"
+      - "canonical mapping present"
+      - "README status block present"
+    on_gap:
+      - "Record gap"
+      - "Generate exact proposed patch"
+      - "Do not claim applied"
+
+  - id: prepare_proposed_updates
+    action: "Produce exact change drafts."
+    artifacts:
+      - repo_manifest_csv_rows
+      - duplicate_analysis_md_append
+      - decision_log_md_append
+      - daily_governance_log_md_append
+
+  - id: publish_report
+    action: "Emit final report in required order."
+    section_order:
+      - DAILY GOVERNANCE REPORT
+      - EVIDENCE
+      - PROPOSED CHANGES
+      - RISKS OR UNCERTAINTIES
+      - NEXT SAFE ACTIONS
+    set_run_state: "ReportGenerated"
