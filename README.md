@@ -198,6 +198,14 @@ src/agentRegistry.ts
 
 Agent definitions in `src/agentRegistry.ts` are the source of truth for both backend routing and the Planner UI catalog. The UI should not maintain a separate agent list.
 
+The shared workflow contract is defined in:
+
+```text
+src/workflowSchema.ts
+```
+
+Planner exports, `scripts/run-workflow.ts`, and the `validator` backend handler should all use this schema instead of maintaining separate workflow shapes.
+
 ## zynx-flow Status
 
 `/Users/kant/zynx-flow` is archived as a reference for the earlier node/edge workflow-builder experiment. The useful concept has been absorbed here as Planner `flow.nodes` / `flow.edges` plus `scripts/run-workflow.ts`.

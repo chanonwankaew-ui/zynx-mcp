@@ -1,42 +1,13 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { AGENT_REGISTRY, findAgent } from "../src/agentRegistry.js";
-
-type WorkflowAgent = {
-  step?: number;
-  id: string;
-  name?: string;
-  role?: string;
-  category?: string;
-  estimatedDuration?: number;
-};
-
-type WorkflowFile = {
-  workflow?: {
-    id?: string;
-    name?: string;
-    goal?: string;
-    agents?: WorkflowAgent[];
-    flow?: {
-      nodes?: FlowNode[];
-      edges?: FlowEdge[];
-    };
-  };
-};
-
-type FlowNode = {
-  id: string;
-  type: "agent";
-  label: string;
-  role: string;
-  category: string;
-  estimatedDuration: number;
-};
-
-type FlowEdge = {
-  source: string;
-  target: string;
-};
+import {
+  normalizeWorkflowAgents,
+  parseWorkflowFile,
+  resolveWorkflowFlow,
+  slugWorkflowName,
+  type WorkflowAgent
+} from "../src/workflowSchema.js";
 
 const defaultWorkflowPath = "workflows/nightly-governance-validation.json";
 const args = process.argv.slice(2);
@@ -44,53 +15,6 @@ const execute = args.includes("--execute");
 const workflowPath = args.find(arg => !arg.startsWith("--")) ?? defaultWorkflowPath;
 const input = args.find((arg, index) => index > args.indexOf(workflowPath) && !arg.startsWith("--")) ?? (execute ? "execute" : "dry-run");
 const backendBaseUrl = (process.env.ZYNX_API_BASE_URL ?? "http://localhost:8787").replace(/\/$/, "");
-
-function slug(value: string): string {
-  return value.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "workflow";
-}
-
-function asWorkflowAgent(agent: WorkflowAgent, index: number): WorkflowAgent {
-  if (!agent.id) {
-    throw new Error(`Workflow agent at index ${index} is missing id`);
-  }
-
-  return {
-    step: agent.step ?? index + 1,
-    id: agent.id,
-    name: agent.name ?? agent.id,
-    role: agent.role ?? "Workflow agent",
-    category: agent.category ?? "worker",
-    estimatedDuration: agent.estimatedDuration ?? 1
-  };
-}
-
-function buildFlow(agents: WorkflowAgent[]) {
-  const nodes: FlowNode[] = agents.map(agent => ({
-    id: agent.id,
-    type: "agent",
-    label: agent.name ?? agent.id,
-    role: agent.role ?? "Workflow agent",
-    category: agent.category ?? "worker",
-    estimatedDuration: agent.estimatedDuration ?? 1
-  }));
-
-  const edges: FlowEdge[] = nodes.slice(1).map((node, index) => ({
-    source: nodes[index].id,
-    target: node.id
-  }));
-
-  return { nodes, edges };
-}
-
-function resolveFlow(workflow: NonNullable<WorkflowFile["workflow"]>, agents: WorkflowAgent[]) {
-  const nodes = workflow.flow?.nodes;
-  const edges = workflow.flow?.edges;
-  if (Array.isArray(nodes) && nodes.length > 0 && Array.isArray(edges)) {
-    return { nodes, edges, source: "workflow.flow" };
-  }
-
-  return { ...buildFlow(agents), source: "generated-from-agents" };
-}
 
 function serviceHeaders() {
   const headers: Record<string, string> = {
@@ -156,24 +80,13 @@ async function invokeBackendAgent(agent: WorkflowAgent, context: Record<string, 
 async function main() {
   const absoluteWorkflowPath = path.resolve(process.cwd(), workflowPath);
   const raw = await readFile(absoluteWorkflowPath, "utf8");
-  const parsed = JSON.parse(raw) as WorkflowFile;
+  const parsed = parseWorkflowFile(JSON.parse(raw));
   const workflow = parsed.workflow;
+  const agents = normalizeWorkflowAgents(workflow.agents);
 
-  if (!workflow) {
-    throw new Error("Workflow file must contain a workflow object");
-  }
-
-  const agents = (workflow.agents ?? []).map(asWorkflowAgent);
-  if (!agents.length) {
-    throw new Error("Workflow must contain at least one agent");
-  }
-
-  const workflowId = slug(workflow.id ?? workflow.name ?? path.basename(workflowPath, ".json"));
-  const flowResult = resolveFlow(workflow, agents);
-  const flow = {
-    nodes: flowResult.nodes,
-    edges: flowResult.edges
-  };
+  const workflowId = slugWorkflowName(workflow.id ?? workflow.name ?? path.basename(workflowPath, ".json"));
+  const flowResult = resolveWorkflowFlow(workflow, agents);
+  const flow = flowResult.flow;
   const now = new Date();
   const dateId = now.toISOString().slice(0, 10);
 

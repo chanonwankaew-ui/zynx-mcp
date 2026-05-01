@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { AGENTS, agentById } from "./agentCatalog";
+import { createWorkflowFile, slugWorkflowName } from "../../../src/workflowSchema";
 
 /* ── DATA ── */
 const PRESETS = [
@@ -33,10 +34,6 @@ function parseSseJson(text) {
   const dataLine = text.split("\n").find(line => line.startsWith("data: "));
   if (!dataLine) return null;
   return JSON.parse(dataLine.replace(/^data:\s*/, ""));
-}
-
-function workflowSlug(name) {
-  return name.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "workflow";
 }
 
 function formatAgentList(ids) {
@@ -280,7 +277,7 @@ export default function App() {
   const palette = ["#7F77DD","#1D9E75","#378ADD","#3B6D11","#D85A30","#BA7517","#185FA5","#993556"];
   const selectedAgents = steps.map(id=>agentById(id)).filter(Boolean);
   const selectedDuration = selectedAgents.reduce((sum, agent)=>sum + agent.dur, 0);
-  const exportFileName = `${workflowSlug(buildName)}.${exportFmt}`;
+  const exportFileName = `${slugWorkflowName(buildName)}.${exportFmt}`;
 
   return (
     <div style={{fontFamily:"var(--font-sans)",color:"var(--color-text-primary)",padding:"1.25rem 1rem",maxWidth:800,position:"relative"}}>
@@ -693,17 +690,25 @@ function GanttView({ steps, name, color }) {
 
 /* ── HELPERS ── */
 function buildExportPayload(steps, name, color) {
-  const agents = steps.map((id,i)=>{ const a=agentById(id); return {step:i+1,id,name:a?.name,role:a?.role,category:a?.cat,estimatedDuration:a?.dur}; });
-  const nodes = agents.map(agent => ({
-    id: agent.id,
-    type: "agent",
-    label: agent.name,
-    role: agent.role,
-    category: agent.category,
-    estimatedDuration: agent.estimatedDuration
-  }));
-  const edges = nodes.slice(1).map((node, index) => ({ source: nodes[index].id, target: node.id }));
-  return { workflow:{ id:name.toLowerCase().replace(/\s+/g,"-"), name, color, created:new Date().toISOString(), agents, flow:{ nodes, edges } } };
+  const agents = steps.map((id,i)=>{
+    const a=agentById(id);
+    return {
+      step:i+1,
+      id,
+      name:a?.name ?? id,
+      role:a?.role ?? "Workflow agent",
+      category:a?.cat ?? "worker",
+      estimatedDuration:a?.dur ?? 1
+    };
+  });
+
+  return createWorkflowFile({
+    id: slugWorkflowName(name),
+    name,
+    color,
+    created: new Date().toISOString(),
+    agents
+  });
 }
 
 function toYAML(payload) {

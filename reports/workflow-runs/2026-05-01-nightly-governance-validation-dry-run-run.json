@@ -1,0 +1,469 @@
+{
+  "workflowRunId": "nightly-governance-validation-2026-05-01T09:11:30.994Z",
+  "workflowId": "nightly-governance-validation",
+  "workflowName": "Nightly Governance Validation",
+  "goal": "Review repository governance state, classify deltas, analyze duplicates, and publish a human-reviewable daily report.",
+  "input": "dry-run",
+  "runMode": "dry-run",
+  "runState": "CompletedDryRun",
+  "executedBy": "scripts/run-workflow.ts",
+  "createdAt": "2026-05-01T09:11:30.994Z",
+  "durationUnits": 23,
+  "contextPassing": "sequential",
+  "flowSource": "workflow.flow",
+  "routeMap": [
+    {
+      "agentId": "orchestrator",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/orchestrator/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "task-planner",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/task-planner/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "router",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/router/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "memory",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/memory/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "scheduler",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/scheduler/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "auth",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/auth/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "deeja",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/deeja/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "dashboard-ui",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/dashboard-ui/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "form-builder",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/form-builder/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "chat-ui",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/chat-ui/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "data-ingest",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/data-ingest/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "validator",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/validator/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "transformer",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/transformer/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "vector-store",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/vector-store/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "db-agent",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/db-agent/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "cache",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/cache/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "code-gen",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/code-gen/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "doc-writer",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/doc-writer/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "reviewer",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/reviewer/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "test-gen",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/test-gen/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "refactor",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/refactor/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "api-builder",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/api-builder/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "prompt-eng",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/prompt-eng/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "rag-agent",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/rag-agent/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "sales-bot",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/sales-bot/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "hr-agent",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/hr-agent/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "finance-agent",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/finance-agent/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "ops-agent",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/ops-agent/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "marketing",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/marketing/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "support-bot",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/support-bot/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "touchscreen",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/touchscreen/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "notifier",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/notifier/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "logger",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/logger/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "report-gen",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/report-gen/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "webhook",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/webhook/invoke",
+      "status": "published"
+    }
+  ],
+  "flow": {
+    "nodes": [
+      {
+        "id": "orchestrator",
+        "type": "agent",
+        "label": "Zynx Orchestrator",
+        "role": "Master coordinator",
+        "category": "core",
+        "estimatedDuration": 2
+      },
+      {
+        "id": "data-ingest",
+        "type": "agent",
+        "label": "Data Ingestion",
+        "role": "Load manifest, repository visibility, and governance files",
+        "category": "data",
+        "estimatedDuration": 5
+      },
+      {
+        "id": "validator",
+        "type": "agent",
+        "label": "Schema Validator",
+        "role": "Validate required files, enums, and report structure",
+        "category": "data",
+        "estimatedDuration": 2
+      },
+      {
+        "id": "transformer",
+        "type": "agent",
+        "label": "Data Transformer",
+        "role": "Normalize repository deltas and proposed manifest rows",
+        "category": "data",
+        "estimatedDuration": 3
+      },
+      {
+        "id": "db-agent",
+        "type": "agent",
+        "label": "DB Agent",
+        "role": "Persist reviewed governance state when approved",
+        "category": "data",
+        "estimatedDuration": 3
+      },
+      {
+        "id": "reviewer",
+        "type": "agent",
+        "label": "Code Reviewer",
+        "role": "Check evidence quality and non-destructive safety gates",
+        "category": "worker",
+        "estimatedDuration": 3
+      },
+      {
+        "id": "report-gen",
+        "type": "agent",
+        "label": "Report Generator",
+        "role": "Create daily governance report from template",
+        "category": "output",
+        "estimatedDuration": 3
+      },
+      {
+        "id": "notifier",
+        "type": "agent",
+        "label": "Notifier",
+        "role": "Notify human reviewer when approval is required",
+        "category": "output",
+        "estimatedDuration": 1
+      },
+      {
+        "id": "logger",
+        "type": "agent",
+        "label": "Logger",
+        "role": "Append audit trail and decision log entries",
+        "category": "output",
+        "estimatedDuration": 1
+      }
+    ],
+    "edges": [
+      {
+        "source": "orchestrator",
+        "target": "data-ingest"
+      },
+      {
+        "source": "data-ingest",
+        "target": "validator"
+      },
+      {
+        "source": "validator",
+        "target": "transformer"
+      },
+      {
+        "source": "transformer",
+        "target": "db-agent"
+      },
+      {
+        "source": "db-agent",
+        "target": "reviewer"
+      },
+      {
+        "source": "reviewer",
+        "target": "report-gen"
+      },
+      {
+        "source": "report-gen",
+        "target": "notifier"
+      },
+      {
+        "source": "notifier",
+        "target": "logger"
+      }
+    ]
+  },
+  "steps": [
+    {
+      "step": 1,
+      "agentId": "orchestrator",
+      "agentName": "Zynx Orchestrator",
+      "role": "Master coordinator",
+      "category": "core",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/orchestrator/invoke",
+      "plannedStart": 0,
+      "plannedEnd": 2,
+      "state": "Mapped",
+      "executed": false,
+      "output": "Dry-run mapped Zynx Orchestrator to invoke_agent -> /agents/orchestrator/invoke"
+    },
+    {
+      "step": 2,
+      "agentId": "data-ingest",
+      "agentName": "Data Ingestion",
+      "role": "Load manifest, repository visibility, and governance files",
+      "category": "data",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/data-ingest/invoke",
+      "plannedStart": 2,
+      "plannedEnd": 7,
+      "state": "Mapped",
+      "executed": false,
+      "output": "Dry-run mapped Data Ingestion to invoke_agent -> /agents/data-ingest/invoke"
+    },
+    {
+      "step": 3,
+      "agentId": "validator",
+      "agentName": "Schema Validator",
+      "role": "Validate required files, enums, and report structure",
+      "category": "data",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/validator/invoke",
+      "plannedStart": 7,
+      "plannedEnd": 9,
+      "state": "Mapped",
+      "executed": false,
+      "output": "Dry-run mapped Schema Validator to invoke_agent -> /agents/validator/invoke"
+    },
+    {
+      "step": 4,
+      "agentId": "transformer",
+      "agentName": "Data Transformer",
+      "role": "Normalize repository deltas and proposed manifest rows",
+      "category": "data",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/transformer/invoke",
+      "plannedStart": 9,
+      "plannedEnd": 12,
+      "state": "Mapped",
+      "executed": false,
+      "output": "Dry-run mapped Data Transformer to invoke_agent -> /agents/transformer/invoke"
+    },
+    {
+      "step": 5,
+      "agentId": "db-agent",
+      "agentName": "DB Agent",
+      "role": "Persist reviewed governance state when approved",
+      "category": "data",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/db-agent/invoke",
+      "plannedStart": 12,
+      "plannedEnd": 15,
+      "state": "Mapped",
+      "executed": false,
+      "output": "Dry-run mapped DB Agent to invoke_agent -> /agents/db-agent/invoke"
+    },
+    {
+      "step": 6,
+      "agentId": "reviewer",
+      "agentName": "Code Reviewer",
+      "role": "Check evidence quality and non-destructive safety gates",
+      "category": "worker",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/reviewer/invoke",
+      "plannedStart": 15,
+      "plannedEnd": 18,
+      "state": "Mapped",
+      "executed": false,
+      "output": "Dry-run mapped Code Reviewer to invoke_agent -> /agents/reviewer/invoke"
+    },
+    {
+      "step": 7,
+      "agentId": "report-gen",
+      "agentName": "Report Generator",
+      "role": "Create daily governance report from template",
+      "category": "output",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/report-gen/invoke",
+      "plannedStart": 18,
+      "plannedEnd": 21,
+      "state": "Mapped",
+      "executed": false,
+      "output": "Dry-run mapped Report Generator to invoke_agent -> /agents/report-gen/invoke"
+    },
+    {
+      "step": 8,
+      "agentId": "notifier",
+      "agentName": "Notifier",
+      "role": "Notify human reviewer when approval is required",
+      "category": "output",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/notifier/invoke",
+      "plannedStart": 21,
+      "plannedEnd": 22,
+      "state": "Mapped",
+      "executed": false,
+      "output": "Dry-run mapped Notifier to invoke_agent -> /agents/notifier/invoke"
+    },
+    {
+      "step": 9,
+      "agentId": "logger",
+      "agentName": "Logger",
+      "role": "Append audit trail and decision log entries",
+      "category": "output",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/logger/invoke",
+      "plannedStart": 22,
+      "plannedEnd": 23,
+      "state": "Mapped",
+      "executed": false,
+      "output": "Dry-run mapped Logger to invoke_agent -> /agents/logger/invoke"
+    }
+  ],
+  "nextActions": [
+    "Review this dry-run route map before running with --execute.",
+    "Map specialized agent behavior behind each backend route.",
+    "Promote approved workflows into scheduled governance or production runbooks."
+  ]
+}

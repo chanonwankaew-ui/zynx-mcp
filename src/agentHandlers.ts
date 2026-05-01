@@ -1,4 +1,11 @@
 import { AGENT_REGISTRY, findAgent, type AgentMeta } from "./agentRegistry.js";
+import {
+  WorkflowSchema,
+  createWorkflowFile,
+  normalizeWorkflowAgents,
+  resolveWorkflowFlow,
+  slugWorkflowName
+} from "./workflowSchema.js";
 
 export type AgentInvocationContext = {
   tenantId: string;
@@ -18,13 +25,6 @@ type WorkflowAgentInput = {
   role?: unknown;
   category?: unknown;
   estimatedDuration?: unknown;
-};
-
-type WorkflowInput = {
-  id?: unknown;
-  name?: unknown;
-  goal?: unknown;
-  agents?: unknown;
 };
 
 type CheckResult = {
@@ -55,15 +55,6 @@ function asArray(value: unknown): unknown[] {
   return Array.isArray(value) ? value : [];
 }
 
-function slug(value: string): string {
-  return value
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "")
-    .slice(0, 80) || "zynx-workflow";
-}
-
 function summarize(value: unknown, maxLength = 240): string {
   const text = typeof value === "string" ? value : JSON.stringify(value);
   if (!text) return "";
@@ -89,7 +80,7 @@ function getGoal(input: Record<string, unknown>): string {
   return "Run Zynx workflow";
 }
 
-function getWorkflow(input: Record<string, unknown>): WorkflowInput | undefined {
+function getWorkflow(input: Record<string, unknown>): unknown | undefined {
   const direct = asRecord(input.workflow);
   if (Object.keys(direct).length) return direct;
 
@@ -160,19 +151,20 @@ function uniqueAgentIds(agentIds: string[]): string[] {
 async function taskPlannerHandler(input: Record<string, unknown>, ctx: AgentInvocationContext): Promise<Record<string, unknown>> {
   const goal = getGoal(input);
   const agents = uniqueAgentIds(plannedAgentIdsForGoal(goal, input)).map(agentStep);
-  const workflowId = slug(stringify(input.workflowId) || goal);
+  const workflowId = slugWorkflowName(stringify(input.workflowId) || goal);
+  const workflowFile = createWorkflowFile({
+    id: workflowId,
+    name: stringify(input.workflowName) || `Zynx Plan: ${goal.slice(0, 60)}`,
+    goal,
+    agents,
+    contextPassing: "sequential",
+    executedBy: "task-planner",
+    tenantId: ctx.tenantId
+  });
 
   return {
     message: `Planned ${agents.length} registry-backed Zynx workflow steps.`,
-    workflow: {
-      id: workflowId,
-      name: stringify(input.workflowName) || `Zynx Plan: ${goal.slice(0, 60)}`,
-      goal,
-      contextPassing: "sequential",
-      executedBy: "task-planner",
-      tenantId: ctx.tenantId,
-      agents
-    },
+    workflow: workflowFile.workflow,
     routeSummary: agents.map((agent) => ({
       agentId: agent.id,
       backendRoute: agent.backendRoute,
@@ -222,7 +214,7 @@ async function deejaHandler(input: Record<string, unknown>, ctx: AgentInvocation
   };
 }
 
-function validateWorkflow(workflow: WorkflowInput | undefined): CheckResult[] {
+function validateWorkflow(workflow: unknown | undefined): CheckResult[] {
   const checks: CheckResult[] = [];
 
   if (!workflow) {
@@ -234,13 +226,23 @@ function validateWorkflow(workflow: WorkflowInput | undefined): CheckResult[] {
     return checks;
   }
 
+  const parsed = WorkflowSchema.safeParse(workflow);
+  if (!parsed.success) {
+    return parsed.error.issues.map((issue) => ({
+      name: `workflow.schema.${issue.path.join(".") || "root"}`,
+      status: "fail",
+      message: issue.message
+    }));
+  }
+
+  const typedWorkflow = parsed.data;
   checks.push({
     name: "workflow.goal",
-    status: stringify(workflow.goal) ? "pass" : "fail",
-    message: stringify(workflow.goal) ? "Workflow goal is present." : "Workflow goal is missing."
+    status: stringify(typedWorkflow.goal) ? "pass" : "warn",
+    message: stringify(typedWorkflow.goal) ? "Workflow goal is present." : "Workflow goal is optional but recommended."
   });
 
-  const agents = asArray(workflow.agents);
+  const agents = normalizeWorkflowAgents(typedWorkflow.agents);
   checks.push({
     name: "workflow.agents",
     status: agents.length > 0 ? "pass" : "fail",
@@ -248,15 +250,41 @@ function validateWorkflow(workflow: WorkflowInput | undefined): CheckResult[] {
   });
 
   for (const [index, agent] of agents.entries()) {
-    const record = asRecord(agent) as WorkflowAgentInput;
-    const agentId = stringify(record.id);
-    const meta = agentId ? findAgent(agentId) : undefined;
+    const meta = findAgent(agent.id);
     checks.push({
       name: `workflow.agents.${index}.route`,
       status: meta ? "pass" : "fail",
       message: meta
-        ? `${agentId} maps to ${meta.backendRoute}.`
+        ? `${agent.id} maps to ${meta.backendRoute}.`
         : `Agent at index ${index} is missing a valid registry route.`
+    });
+  }
+
+  const flowResult = resolveWorkflowFlow(typedWorkflow, agents);
+  checks.push({
+    name: "workflow.flow",
+    status: flowResult.source === "workflow.flow" ? "pass" : "warn",
+    message: flowResult.source === "workflow.flow"
+      ? `Workflow contains typed flow with ${flowResult.flow.nodes.length} nodes and ${flowResult.flow.edges.length} edges.`
+      : "Workflow has no flow object; a sequential flow will be generated from agents."
+  });
+
+  const agentIds = new Set(agents.map((agent) => agent.id));
+  for (const node of flowResult.flow.nodes) {
+    checks.push({
+      name: `workflow.flow.nodes.${node.id}`,
+      status: agentIds.has(node.id) ? "pass" : "fail",
+      message: agentIds.has(node.id) ? `${node.id} is backed by workflow.agents.` : `${node.id} is not listed in workflow.agents.`
+    });
+  }
+
+  const nodeIds = new Set(flowResult.flow.nodes.map((node) => node.id));
+  for (const edge of flowResult.flow.edges) {
+    const valid = nodeIds.has(edge.source) && nodeIds.has(edge.target);
+    checks.push({
+      name: `workflow.flow.edges.${edge.source}->${edge.target}`,
+      status: valid ? "pass" : "fail",
+      message: valid ? "Edge endpoints resolve to flow nodes." : "Edge endpoint is missing from flow nodes."
     });
   }
 
@@ -415,4 +443,3 @@ export async function invokeAgentHandler(
     durationMs: Date.now() - startedAt
   };
 }
-
