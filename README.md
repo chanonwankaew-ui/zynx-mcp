@@ -86,6 +86,12 @@ ZYNX_API_BASE_URL=http://localhost:8787
 ZYNX_SERVICE_TOKEN=
 ZYNX_DEFAULT_TENANT_ID=dev
 ZYNX_DEFAULT_USER_ID=chatgpt-mcp
+ZYNX_LLM_PROVIDER=local
+ZYNX_LLM_REQUIRE_PROVIDER=false
+ZYNX_LLM_TIMEOUT_MS=30000
+OPENAI_BASE_URL=https://api.openai.com/v1
+OPENAI_MODEL=
+OPENAI_API_KEY=
 ```
 
 ## Backend Contract
@@ -122,6 +128,32 @@ reviewer
 ```
 
 Other registered agents use a deterministic fallback handler until a specialized implementation is added.
+
+## Provider Execution
+
+LLM/provider execution is opt-in so local development, CI, governance validation, and dry-run reports remain deterministic by default.
+
+```text
+ZYNX_LLM_PROVIDER=local
+```
+
+Set the provider to OpenAI only when the backend should call the remote Responses API:
+
+```text
+ZYNX_LLM_PROVIDER=openai
+OPENAI_MODEL=your-model
+OPENAI_API_KEY=
+```
+
+The provider adapter is currently wired into `task-planner` and `deeja` only:
+
+- `task-planner` keeps generating typed workflow JSON locally, then asks the provider for a concise operator summary.
+- `deeja` keeps the structured persona/actionable-card contract locally, then asks the provider for the user-facing message.
+- `validator` and `reviewer` remain deterministic local gates.
+
+If `ZYNX_LLM_PROVIDER=openai` is set but the key, model, or provider request fails, the backend falls back to the local deterministic handler and records the issue in `output.providerExecution`. Set `ZYNX_LLM_REQUIRE_PROVIDER=true` to make provider failures fail the invocation instead.
+
+Provider requests use `ZYNX_LLM_TIMEOUT_MS` as their remote call timeout.
 
 ## Production Notes
 

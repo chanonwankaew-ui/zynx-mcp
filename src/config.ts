@@ -13,3 +13,16 @@ function numberFromEnv(name: string, fallback: number) {
 export const mcpHttpPort = numberFromEnv("MCP_PORT", numberFromEnv("PORT", 3000));
 export const agentBackendPort = numberFromEnv("ZYNX_BACKEND_PORT", numberFromEnv("PORT", 8787));
 export const mcpPath = process.env.MCP_PATH || "/mcp";
+
+function booleanFromEnv(name: string, fallback = false) {
+  const value = process.env[name];
+  if (!value) return fallback;
+
+  return ["1", "true", "yes", "on"].includes(value.toLowerCase());
+}
+
+export const llmProvider = (process.env.ZYNX_LLM_PROVIDER || "local").toLowerCase();
+export const llmRequireProvider = booleanFromEnv("ZYNX_LLM_REQUIRE_PROVIDER");
+export const llmTimeoutMs = numberFromEnv("ZYNX_LLM_TIMEOUT_MS", 30000);
+export const openaiBaseUrl = (process.env.OPENAI_BASE_URL || "https://api.openai.com/v1").replace(/\/$/, "");
+export const openaiModel = process.env.OPENAI_MODEL || "";

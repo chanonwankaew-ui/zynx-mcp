@@ -6,6 +6,7 @@ import {
   resolveWorkflowFlow,
   slugWorkflowName
 } from "./workflowSchema.js";
+import { generateProviderText, type ProviderTextResult } from "./providerClient.js";
 
 export type AgentInvocationContext = {
   tenantId: string;
@@ -59,6 +60,17 @@ function summarize(value: unknown, maxLength = 240): string {
   const text = typeof value === "string" ? value : JSON.stringify(value);
   if (!text) return "";
   return text.length > maxLength ? `${text.slice(0, maxLength - 3)}...` : text;
+}
+
+function publicProviderExecution(result: ProviderTextResult) {
+  return {
+    provider: result.provider,
+    status: result.status,
+    modelUsed: result.modelUsed,
+    tokensUsed: result.tokensUsed,
+    usedRemoteProvider: result.usedRemoteProvider,
+    error: result.error
+  };
 }
 
 function getGoal(input: Record<string, unknown>): string {
@@ -161,9 +173,31 @@ async function taskPlannerHandler(input: Record<string, unknown>, ctx: AgentInvo
     executedBy: "task-planner",
     tenantId: ctx.tenantId
   });
+  const provider = await generateProviderText({
+    instructions: [
+      "You are the Zynx task-planner agent.",
+      "Write a concise operator summary for a workflow plan.",
+      "Do not invent agent ids or routes. Mention only risks or next actions supported by the supplied plan."
+    ].join(" "),
+    input: JSON.stringify({
+      goal,
+      agents: agents.map((agent) => ({
+        id: agent.id,
+        name: agent.name,
+        backendRoute: agent.backendRoute,
+        mcpTool: agent.mcpTool
+      }))
+    }),
+    fallbackText: `Planned ${agents.length} registry-backed Zynx workflow steps.`,
+    maxOutputTokens: 240,
+    metadata: {
+      agent_id: "task-planner",
+      tenant_id: ctx.tenantId
+    }
+  });
 
   return {
-    message: `Planned ${agents.length} registry-backed Zynx workflow steps.`,
+    message: provider.text,
     workflow: workflowFile.workflow,
     routeSummary: agents.map((agent) => ({
       agentId: agent.id,
@@ -174,7 +208,8 @@ async function taskPlannerHandler(input: Record<string, unknown>, ctx: AgentInvo
       "Review the generated workflow before execute mode.",
       "Run scripts/run-workflow.ts in dry-run mode to verify every route.",
       "Keep provider-dependent execution behind environment checks."
-    ]
+    ],
+    providerExecution: publicProviderExecution(provider)
   };
 }
 
@@ -184,11 +219,33 @@ async function deejaHandler(input: Record<string, unknown>, ctx: AgentInvocation
   const rawResult = input.result ?? input.output ?? context.result ?? context.output ?? input;
   const hasThai = /[\u0E00-\u0E7F]/.test(goal) || /[\u0E00-\u0E7F]/.test(JSON.stringify(rawResult));
   const summary = summarize(rawResult);
+  const fallbackMessage = hasThai
+    ? "รับงานแล้วค่ะ นี่คือสรุปสถานะที่ตรวจสอบได้"
+    : "Received. Here is the reviewable Zynx response.";
+  const provider = await generateProviderText({
+    instructions: [
+      "You are Deeja, the Zynx user-facing persona layer.",
+      "Write one calm, actionable response for the user.",
+      "Keep orchestration details separate from user-facing wording.",
+      hasThai ? "Respond in Thai." : "Respond in English."
+    ].join(" "),
+    input: JSON.stringify({
+      goal,
+      backendSummary: summary,
+      tenantId: ctx.tenantId,
+      userId: ctx.userId
+    }),
+    fallbackText: fallbackMessage,
+    maxOutputTokens: 220,
+    metadata: {
+      agent_id: "deeja",
+      tenant_id: ctx.tenantId,
+      language: hasThai ? "th" : "en"
+    }
+  });
 
   return {
-    message: hasThai
-      ? "รับงานแล้วค่ะ นี่คือสรุปสถานะที่ตรวจสอบได้"
-      : "Received. Here is the reviewable Zynx response.",
+    message: provider.text,
     persona: "Deeja",
     language: hasThai ? "th" : "en",
     tone: "calm-operator",
@@ -210,7 +267,8 @@ async function deejaHandler(input: Record<string, unknown>, ctx: AgentInvocation
         tenantId: ctx.tenantId,
         userId: ctx.userId
       }
-    ]
+    ],
+    providerExecution: publicProviderExecution(provider)
   };
 }
 
@@ -438,8 +496,10 @@ export async function invokeAgentHandler(
         ? "specialized-handler"
         : "fallback-handler"
     },
-    tokensUsed: 0,
-    modelUsed: "local-deterministic-handler",
+    tokensUsed: typeof asRecord(output.providerExecution).tokensUsed === "number"
+      ? asRecord(output.providerExecution).tokensUsed as number
+      : 0,
+    modelUsed: stringify(asRecord(output.providerExecution).modelUsed) || "local-deterministic-handler",
     durationMs: Date.now() - startedAt
   };
 }
