@@ -1,0 +1,66 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Build, Audit, And Validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            apps/workflow-mapper/package-lock.json
+
+      - name: Install root dependencies
+        run: npm ci
+
+      - name: Build root MCP workspace
+        run: npm run build
+
+      - name: Audit root dependencies
+        run: npm audit --audit-level=moderate
+
+      - name: Validate governance artifacts
+        run: npm run governance:validate
+
+      - name: Dry-run nightly governance workflow
+        run: npm run workflow:run workflows/nightly-governance-validation.json
+
+      - name: Dry-run developer-mode workflow
+        run: npm run workflow:run workflows/zynx-developer-mode-build.json
+
+      - name: Install workflow mapper dependencies
+        run: npm ci
+        working-directory: apps/workflow-mapper
+
+      - name: Build workflow mapper
+        run: npm run build
+        working-directory: apps/workflow-mapper
+
+      - name: Audit workflow mapper dependencies
+        run: npm audit --audit-level=moderate
+        working-directory: apps/workflow-mapper
