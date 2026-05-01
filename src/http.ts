@@ -6,8 +6,11 @@ import { createZynxMcpServer } from "./mcpServer.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { mcpHttpPort, mcpPath } from "./config.js";
 
+// Allow override via env; default to * for local dev only.
+const corsOrigin = process.env.ZYNX_CORS_ORIGIN ?? "*";
+
 const app = express();
-app.use(cors());
+app.use(cors({ origin: corsOrigin }));
 app.use(express.json());
 
 const transports = new Map<string, StreamableHTTPServerTransport>();

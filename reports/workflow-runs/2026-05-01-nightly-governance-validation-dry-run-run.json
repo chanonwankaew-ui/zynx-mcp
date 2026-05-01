@@ -1,5 +1,5 @@
 {
-  "workflowRunId": "nightly-governance-validation-2026-05-01T09:11:30.994Z",
+  "workflowRunId": "nightly-governance-validation-2026-05-01T10:16:55.311Z",
   "workflowId": "nightly-governance-validation",
   "workflowName": "Nightly Governance Validation",
   "goal": "Review repository governance state, classify deltas, analyze duplicates, and publish a human-reviewable daily report.",
@@ -7,7 +7,7 @@
   "runMode": "dry-run",
   "runState": "CompletedDryRun",
   "executedBy": "scripts/run-workflow.ts",
-  "createdAt": "2026-05-01T09:11:30.994Z",
+  "createdAt": "2026-05-01T10:16:55.311Z",
   "durationUnits": 23,
   "contextPassing": "sequential",
   "flowSource": "workflow.flow",

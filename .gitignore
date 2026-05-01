@@ -29,3 +29,6 @@ oracleJdk-26.jdk/
 *.log
 .DS_Store
 **/.DS_Store
+
+# Stray compiled / generated binaries at root
+/zynx-mcp

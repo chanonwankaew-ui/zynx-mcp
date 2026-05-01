@@ -21,17 +21,17 @@
     "start:backend": "node dist/backend.js"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "latest",
-    "cors": "latest",
-    "dotenv": "latest",
-    "express": "latest",
-    "zod": "latest"
+    "@modelcontextprotocol/sdk": "1.29.0",
+    "cors": "2.8.6",
+    "dotenv": "16.6.1",
+    "express": "4.22.1",
+    "zod": "3.25.76"
   },
   "devDependencies": {
-    "@types/cors": "^2.8.19",
-    "@types/express": "latest",
-    "@types/node": "latest",
-    "tsx": "latest",
-    "typescript": "latest"
+    "@types/cors": "2.8.19",
+    "@types/express": "5.0.6",
+    "@types/node": "22.19.15",
+    "tsx": "4.21.0",
+    "typescript": "5.9.3"
   }
 }

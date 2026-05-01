@@ -27,8 +27,8 @@ const CAT_ORDER = ["core","ui","data","worker","biz","output"];
 const STORE_KEY = "zynx_wf_saved";
 const loadSaved = () => { try { return JSON.parse(localStorage.getItem(STORE_KEY)||"[]"); } catch{ return []; } };
 const persistSaved = list => { try { localStorage.setItem(STORE_KEY, JSON.stringify(list)); } catch{} };
-const ZYNX_BACKEND_URL = "http://localhost:8787";
-const ZYNX_MCP_URL = "http://localhost:3000/mcp";
+const ZYNX_BACKEND_URL = import.meta.env.VITE_BACKEND_URL ?? "http://localhost:8787";
+const ZYNX_MCP_URL = (import.meta.env.VITE_MCP_URL ?? "http://localhost:3000") + "/mcp";
 
 function parseSseJson(text) {
   const dataLine = text.split("\n").find(line => line.startsWith("data: "));

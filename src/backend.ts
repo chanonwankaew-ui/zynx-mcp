@@ -5,8 +5,11 @@ import { agentBackendPort } from "./config.js";
 import { AGENT_REGISTRY, type AgentMeta, findAgent } from "./agentRegistry.js";
 import { invokeAgentHandler } from "./agentHandlers.js";
 
+// Allow override via env; default to * for local dev only.
+const corsOrigin = process.env.ZYNX_CORS_ORIGIN ?? "*";
+
 const app = express();
-app.use(cors());
+app.use(cors({ origin: corsOrigin }));
 app.use(express.json());
 
 // ─── Zod Schemas ──────────────────────────────────────────────────────────────
@@ -49,14 +52,30 @@ function assertRole(meta: AgentMeta, roles: string[]) {
   if (!ok) throw Object.assign(new Error("Insufficient role"), { status: 403 });
 }
 
-// ─── Health Metrics Stub ──────────────────────────────────────────────────────
+// ─── Health Metrics ───────────────────────────────────────────────────────────
 
-async function getAgentHealthMetrics(agentId: string) {
+const DEV_STUB_HEALTH = process.env.DEV_STUB_HEALTH === "true";
+
+async function getAgentHealthMetrics(_agentId: string) {
+  if (DEV_STUB_HEALTH) {
+    // Explicit stub mode — only active when DEV_STUB_HEALTH=true.
+    return {
+      uptime: Math.floor(Math.random() * 86400),
+      memoryMb: Math.floor(Math.random() * 512) + 64,
+      latencyMs: Math.floor(Math.random() * 100) + 10,
+      activeJobs: Math.floor(Math.random() * 5),
+      errors: 0,
+    };
+  }
+
+  const mem = process.memoryUsage();
   return {
-    uptime: Math.floor(Math.random() * 86400),
-    memoryMb: Math.floor(Math.random() * 512) + 64,
-    latencyMs: Math.floor(Math.random() * 100) + 10,
-    activeJobs: Math.floor(Math.random() * 5),
+    uptime: Math.floor(process.uptime()),
+    memoryMb: Math.round(mem.rss / 1024 / 1024),
+    heapUsedMb: Math.round(mem.heapUsed / 1024 / 1024),
+    heapTotalMb: Math.round(mem.heapTotal / 1024 / 1024),
+    latencyMs: null,   // populated by a real probe when implemented
+    activeJobs: null,  // populated by a real job queue when implemented
     errors: 0,
   };
 }
@@ -181,8 +200,9 @@ app.get("/agents/:agentId/health", async (req, res) => {
 app.listen(agentBackendPort, () => {
   console.log(`🤖 Zynx Agent Backend`);
   console.log(`   Port: ${agentBackendPort}`);
-  console.log(`   Health: http://localhost:${agentBackendPort}/health`);
-  console.log(`   Agents: http://localhost:${agentBackendPort}/agents`);
-  console.log(`   Invoke: POST http://localhost:${agentBackendPort}/agents/:agentId/invoke`);
-  console.log(`   Health: GET http://localhost:${agentBackendPort}/agents/:agentId/health`);
+  console.log(`   Health:       http://localhost:${agentBackendPort}/health`);
+  console.log(`   Agents:       http://localhost:${agentBackendPort}/agents`);
+  console.log(`   Invoke:       POST http://localhost:${agentBackendPort}/agents/:agentId/invoke`);
+  console.log(`   Agent Health: GET  http://localhost:${agentBackendPort}/agents/:agentId/health`);
+  console.log(`   CORS origin:  ${corsOrigin}`);
 });
