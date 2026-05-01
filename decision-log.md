@@ -47,3 +47,20 @@ Decision: Keep outcomes as proposed (`MARK_AS_MERGED`, `REVIEW_MANUALLY`) withou
 Reason: Non-negotiable safety policy forbids automatic deletion/merge without human instruction.
 
 Next step: Review each family manually before archive/merge actions.
+
+## Decision: Record 2026-05-01 governance drift for zynx-mcp only
+
+Date: 2026-05-01
+Status: CONFIRMED
+Repository / Family: zynx-mcp and baseline manifest
+Evidence:
+
+- `/tmp/zynx_repo_inventory_2026-05-01.psv` shows 40 deduped repositories from 42 local git roots.
+- `/tmp/zynx_governance_discovery_2026-05-01.json` reports no new repositories, no missing repositories, and one changed repo (`zynx-mcp` HEAD only).
+- `git -C /Users/kant/zynx-mcp rev-parse HEAD` returned `26daddbc4cf43bca30df1e056832f8c29406b799`.
+
+Decision: Update only the `zynx-mcp` row in `repo-manifest.csv` (HEAD, notes, last_checked_at) and keep duplicate-family recommendations unchanged.
+
+Reason: This run found no classification drift across the other 39 repositories and no net repository additions/removals.
+
+Next step: Continue nightly non-destructive checks and prioritize README status-block rollout in canonical repositories still marked missing.
