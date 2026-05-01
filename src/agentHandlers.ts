@@ -6,11 +6,12 @@ import {
   resolveWorkflowFlow,
   slugWorkflowName
 } from "./workflowSchema.js";
-import { generateProviderText, type ProviderTextResult } from "./providerClient.js";
+import { generateProviderText, type ProviderRuntimeConfig, type ProviderTextResult } from "./providerClient.js";
 
 export type AgentInvocationContext = {
   tenantId: string;
   userId: string;
+  providerConfig?: ProviderRuntimeConfig;
 };
 
 export type AgentHandlerResult = {
@@ -193,7 +194,8 @@ async function taskPlannerHandler(input: Record<string, unknown>, ctx: AgentInvo
     metadata: {
       agent_id: "task-planner",
       tenant_id: ctx.tenantId
-    }
+    },
+    runtime: ctx.providerConfig
   });
 
   return {
@@ -241,7 +243,8 @@ async function deejaHandler(input: Record<string, unknown>, ctx: AgentInvocation
       agent_id: "deeja",
       tenant_id: ctx.tenantId,
       language: hasThai ? "th" : "en"
-    }
+    },
+    runtime: ctx.providerConfig
   });
 
   return {

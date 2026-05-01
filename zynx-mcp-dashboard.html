@@ -172,6 +172,36 @@
 
   .field input[type="password"] { letter-spacing: 0.1em; }
 
+  .field-hint {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--text3);
+    line-height: 1.45;
+    margin-top: 4px;
+  }
+
+  .field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .check-field {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 30px;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text2);
+  }
+
+  .check-field input {
+    width: 14px;
+    height: 14px;
+    accent-color: var(--purple);
+  }
+
   .btn {
     font-family: var(--mono);
     font-size: 11px;
@@ -640,11 +670,11 @@
     <div class="config-group">
       <div class="field">
         <label>BACKEND URL</label>
-        <input type="text" id="backendUrl" value="http://localhost:8787" placeholder="http://localhost:8787"/>
+        <input type="text" id="backendUrl" value="http://localhost:8790" placeholder="http://localhost:8787"/>
       </div>
       <div class="field">
         <label>MCP WRAPPER URL</label>
-        <input type="text" id="mcpUrl" value="http://localhost:3000/mcp" placeholder="http://localhost:3000/mcp"/>
+        <input type="text" id="mcpUrl" value="http://localhost:8790/mcp" placeholder="http://localhost:3000/mcp"/>
       </div>
       <div class="field">
         <label>SERVICE TOKEN (optional)</label>
@@ -658,6 +688,42 @@
         <label>USER ID</label>
         <input type="text" id="userId" value="mcp-console"/>
       </div>
+    </div>
+
+    <hr class="sidebar-divider"/>
+    <div class="section-label">LLM PROVIDER</div>
+    <div class="config-group">
+      <div class="field">
+        <label>PROVIDER</label>
+        <select id="llmProvider">
+          <option value="local">local deterministic</option>
+          <option value="openai">openai responses</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>OPENAI BASE URL</label>
+        <input type="text" id="openaiBaseUrl" value="https://api.openai.com/v1" autocomplete="off"/>
+      </div>
+      <div class="field">
+        <label>OPENAI MODEL</label>
+        <input type="text" id="openaiModel" placeholder="example: gpt-4.1-mini" autocomplete="off"/>
+      </div>
+      <div class="field">
+        <label>OPENAI API KEY</label>
+        <input type="password" id="openaiApiKey" placeholder="used for this invoke request only" autocomplete="off"/>
+        <div class="field-hint">Not saved by this HTML. Sent only to backend invoke requests.</div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>LLM TIMEOUT MS</label>
+          <input type="number" id="llmTimeoutMs" value="30000"/>
+        </div>
+        <label class="check-field" style="align-self:end;">
+          <input type="checkbox" id="llmRequireProvider"/>
+          require provider
+        </label>
+      </div>
+      <button class="btn btn-secondary" onclick="clearOpenAIKey()" style="justify-content:center;">CLEAR KEY</button>
     </div>
 
     <div class="sidebar-btn-row" style="margin-top:10px;">
@@ -757,6 +823,8 @@
             <div class="meta-kv"><span>ms:</span><span id="metaMs" style="color:var(--text);">—</span></div>
             <div class="meta-kv"><span>tokens:</span><span id="metaTokens" style="color:var(--text);">—</span></div>
             <div class="meta-kv"><span>model:</span><span id="metaModel" style="color:var(--text);">—</span></div>
+            <div class="meta-kv"><span>provider:</span><span id="metaProvider" style="color:var(--text);">—</span></div>
+            <div class="meta-kv"><span>remote:</span><span id="metaRemote" style="color:var(--text);">—</span></div>
           </div>
         </div>
       </div>
@@ -827,6 +895,7 @@ let agents = [];
 let lastResponse = null;
 let logEntries = [];
 let healthResults = {};
+const CONFIG_STORE_KEY = 'zynx_mcp_dashboard_config_v1';
 
 // ── Helpers ───────────────────────────────────────────────────────────────
 const $ = id => document.getElementById(id);
@@ -841,7 +910,43 @@ function getConfig() {
   };
 }
 
-function makeHeaders() {
+function saveUiConfig() {
+  try {
+    const config = {
+      backendUrl: $('backendUrl').value,
+      mcpUrl: $('mcpUrl').value,
+      tenantId: $('tenantId').value,
+      userId: $('userId').value,
+      llmProvider: $('llmProvider').value,
+      openaiBaseUrl: $('openaiBaseUrl').value,
+      openaiModel: $('openaiModel').value,
+      llmTimeoutMs: $('llmTimeoutMs').value,
+      llmRequireProvider: $('llmRequireProvider').checked
+    };
+
+    localStorage.setItem(CONFIG_STORE_KEY, JSON.stringify(config));
+  } catch {
+    addLog('warn', 'Browser storage unavailable; dashboard settings were not saved.');
+  }
+}
+
+function loadUiConfig() {
+  try {
+    const raw = localStorage.getItem(CONFIG_STORE_KEY);
+    if (!raw) return;
+    const config = JSON.parse(raw);
+    for (const [key, value] of Object.entries(config)) {
+      const el = $(key);
+      if (!el) continue;
+      if (el.type === 'checkbox') el.checked = Boolean(value);
+      else el.value = String(value);
+    }
+  } catch {
+    localStorage.removeItem(CONFIG_STORE_KEY);
+  }
+}
+
+function makeHeaders(includeProvider = false) {
   const { token, tenantId, userId } = getConfig();
   const h = {
     'content-type': 'application/json',
@@ -850,7 +955,47 @@ function makeHeaders() {
     'x-zynx-roles': 'user,admin'
   };
   if (token) h['authorization'] = `Bearer ${token}`;
+
+  if (includeProvider) {
+    const provider = $('llmProvider').value;
+    const model = $('openaiModel').value.trim();
+    const apiKey = $('openaiApiKey').value.trim();
+    const baseUrl = $('openaiBaseUrl').value.trim();
+    const llmTimeout = $('llmTimeoutMs').value.trim();
+
+    h['x-zynx-llm-provider'] = provider;
+    if ($('llmRequireProvider').checked) h['x-zynx-llm-require-provider'] = 'true';
+    if (llmTimeout) h['x-zynx-llm-timeout-ms'] = llmTimeout;
+    if (baseUrl) h['x-openai-base-url'] = baseUrl;
+    if (model) h['x-openai-model'] = model;
+    if (apiKey) h['x-openai-api-key'] = apiKey;
+  }
+
   return h;
+}
+
+function clearOpenAIKey() {
+  $('openaiApiKey').value = '';
+  addLog('info', 'OpenAI API key field cleared');
+  showToast('Key cleared from browser field');
+}
+
+function wireConfigPersistence() {
+  [
+    'backendUrl',
+    'mcpUrl',
+    'tenantId',
+    'userId',
+    'llmProvider',
+    'openaiBaseUrl',
+    'openaiModel',
+    'llmTimeoutMs',
+    'llmRequireProvider'
+  ].forEach(id => {
+    const el = $(id);
+    el?.addEventListener('change', saveUiConfig);
+    el?.addEventListener('input', saveUiConfig);
+  });
 }
 
 function setStatus(state, text) {
@@ -1117,12 +1262,15 @@ async function invokeAgent() {
   $('responseMeta').style.display = 'none';
 
   addLog('info', `Invoking agent ${agentId} with ${JSON.stringify(inputPayload).slice(0,80)}...`);
+  if ($('llmProvider').value === 'openai' && !$('openaiApiKey').value.trim()) {
+    addLog('warn', 'OpenAI provider selected without an API key; backend should use env key or local fallback.');
+  }
 
   const start = Date.now();
   try {
     const res = await fetch(`${getConfig().backendUrl}/agents/${agentId}/invoke`, {
       method: 'POST',
-      headers: makeHeaders(),
+      headers: makeHeaders(true),
       body: JSON.stringify(body)
     });
     const elapsed = Date.now() - start;
@@ -1138,8 +1286,11 @@ async function invokeAgent() {
       $('metaMs').textContent = elapsed;
       $('metaTokens').textContent = '—';
       $('metaModel').textContent = '—';
+      $('metaProvider').textContent = '—';
+      $('metaRemote').textContent = '—';
       addLog('err', `Agent ${agentId} returned ${res.status}: ${data.error}`);
     } else {
+      const providerExecution = data.output?.providerExecution || {};
       $('outputArea').innerHTML = `<pre>${highlightJson(data)}</pre>`;
       $('responseMeta').style.display = 'flex';
       $('responseStatus').className = 'meta-pill ok';
@@ -1148,7 +1299,10 @@ async function invokeAgent() {
       $('metaMs').textContent = (data.meta?.durationMs ?? elapsed) + 'ms';
       $('metaTokens').textContent = data.meta?.tokensUsed ?? '—';
       $('metaModel').textContent = data.meta?.modelUsed ?? '—';
-      addLog('ok', `Agent ${agentId} responded in ${elapsed}ms — tokens:${data.meta?.tokensUsed||0} model:${data.meta?.modelUsed||'local'}`);
+      $('metaProvider').textContent = providerExecution.provider ?? 'local';
+      $('metaRemote').textContent = providerExecution.usedRemoteProvider ? 'yes' : 'no';
+      if (providerExecution.error) addLog('warn', `Provider fallback: ${providerExecution.error}`);
+      addLog('ok', `Agent ${agentId} responded in ${elapsed}ms — tokens:${data.meta?.tokensUsed||0} model:${data.meta?.modelUsed||'local'} provider:${providerExecution.provider || 'local'}`);
     }
   } catch (err) {
     $('outputArea').innerHTML = `<div style="color:var(--red);font-family:var(--mono);font-size:11px;">✗ ${escHtml(err.message)}</div>`;
@@ -1189,6 +1343,8 @@ function switchTab(name, el) {
 }
 
 // init log
+loadUiConfig();
+wireConfigPersistence();
 addLog('info', 'Zynx MCP Console initialized. Enter backend URL and click CONNECT.');
 </script>
 </body>

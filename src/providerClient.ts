@@ -14,6 +14,7 @@ export type ProviderTextRequest = {
   fallbackText: string;
   maxOutputTokens?: number;
   metadata?: Record<string, string>;
+  runtime?: ProviderRuntimeConfig;
 };
 
 export type ProviderTextResult = {
@@ -24,6 +25,15 @@ export type ProviderTextResult = {
   tokensUsed: number;
   usedRemoteProvider: boolean;
   error?: string;
+};
+
+export type ProviderRuntimeConfig = {
+  provider?: string;
+  requireProvider?: boolean;
+  timeoutMs?: number;
+  openaiBaseUrl?: string;
+  openaiModel?: string;
+  openaiApiKey?: string;
 };
 
 type ResponseContentPart = {
@@ -96,24 +106,49 @@ function extractOutputText(body: OpenAIResponseBody): string {
   return chunks.join("\n").trim();
 }
 
+function runtimeRequireProvider(runtime: ProviderRuntimeConfig | undefined) {
+  return runtime?.requireProvider ?? llmRequireProvider;
+}
+
+function runtimeProvider(runtime: ProviderRuntimeConfig | undefined) {
+  return (runtime?.provider || llmProvider || "local").toLowerCase();
+}
+
+function runtimeOpenAIBaseUrl(runtime: ProviderRuntimeConfig | undefined) {
+  return (runtime?.openaiBaseUrl || openaiBaseUrl).replace(/\/$/, "");
+}
+
+function runtimeOpenAIModel(runtime: ProviderRuntimeConfig | undefined) {
+  return runtime?.openaiModel || openaiModel;
+}
+
+function runtimeOpenAIKey(runtime: ProviderRuntimeConfig | undefined) {
+  return runtime?.openaiApiKey || process.env.OPENAI_API_KEY || "";
+}
+
+function runtimeTimeoutMs(runtime: ProviderRuntimeConfig | undefined) {
+  return runtime?.timeoutMs ?? llmTimeoutMs;
+}
+
 async function callOpenAI(request: ProviderTextRequest): Promise<ProviderTextResult> {
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey || !openaiModel) {
+  const apiKey = runtimeOpenAIKey(request.runtime);
+  const model = runtimeOpenAIModel(request.runtime);
+  if (!apiKey || !model) {
     const missing = !apiKey ? "OPENAI_API_KEY" : "OPENAI_MODEL";
     const message = `OpenAI provider is selected but ${missing} is not configured.`;
-    if (llmRequireProvider) throw new Error(message);
+    if (runtimeRequireProvider(request.runtime)) throw new Error(message);
     return providerDisabledResult(request.fallbackText, message);
   }
 
-  const response = await fetch(`${openaiBaseUrl}/responses`, {
+  const response = await fetch(`${runtimeOpenAIBaseUrl(request.runtime)}/responses`, {
     method: "POST",
     headers: {
       "content-type": "application/json",
       authorization: `Bearer ${apiKey}`
     },
-    signal: AbortSignal.timeout(llmTimeoutMs),
+    signal: AbortSignal.timeout(runtimeTimeoutMs(request.runtime)),
     body: JSON.stringify({
-      model: openaiModel,
+      model,
       instructions: request.instructions,
       input: request.input,
       max_output_tokens: request.maxOutputTokens ?? 512,
@@ -141,16 +176,17 @@ async function callOpenAI(request: ProviderTextRequest): Promise<ProviderTextRes
     text: outputText,
     provider: "openai",
     status: "completed",
-    modelUsed: typeof body.model === "string" ? body.model : openaiModel,
+    modelUsed: typeof body.model === "string" ? body.model : model,
     tokensUsed: typeof body.usage?.total_tokens === "number" ? body.usage.total_tokens : 0,
     usedRemoteProvider: true
   };
 }
 
 export async function generateProviderText(request: ProviderTextRequest): Promise<ProviderTextResult> {
-  if (llmProvider !== "openai") {
-    if (llmRequireProvider) {
-      throw new Error(`Unsupported required ZYNX_LLM_PROVIDER "${llmProvider}".`);
+  const provider = runtimeProvider(request.runtime);
+  if (provider !== "openai") {
+    if (runtimeRequireProvider(request.runtime)) {
+      throw new Error(`Unsupported required ZYNX_LLM_PROVIDER "${provider}".`);
     }
     return providerDisabledResult(request.fallbackText);
   }
@@ -159,7 +195,7 @@ export async function generateProviderText(request: ProviderTextRequest): Promis
     return await callOpenAI(request);
   } catch (error) {
     const message = safeErrorMessage(error);
-    if (llmRequireProvider) throw new Error(message);
+    if (runtimeRequireProvider(request.runtime)) throw new Error(message);
     return providerDisabledResult(request.fallbackText, message);
   }
 }

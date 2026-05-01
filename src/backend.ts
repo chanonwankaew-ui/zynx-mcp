@@ -1,15 +1,18 @@
 import express from "express";
 import { z } from "zod";
 import cors from "cors";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { agentBackendPort } from "./config.js";
 import { AGENT_REGISTRY, type AgentMeta, findAgent } from "./agentRegistry.js";
 import { invokeAgentHandler } from "./agentHandlers.js";
-
-// Allow override via env; default to * for local dev only.
-const corsOrigin = process.env.ZYNX_CORS_ORIGIN ?? "*";
+import type { ProviderRuntimeConfig } from "./providerClient.js";
+import { describeCorsOrigins, zynxCorsOptions } from "./corsConfig.js";
 
 const app = express();
-app.use(cors({ origin: corsOrigin }));
+const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+
+app.use(cors(zynxCorsOptions()));
 app.use(express.json());
 
 // ─── Zod Schemas ──────────────────────────────────────────────────────────────
@@ -31,6 +34,47 @@ function getAuth(req: express.Request) {
   const userId = req.headers["x-zynx-user-id"] as string || "anonymous";
   const roles = (req.headers["x-zynx-roles"] as string || "user").split(",");
   return { tenantId, userId, roles };
+}
+
+function headerString(req: express.Request, name: string) {
+  const value = req.headers[name.toLowerCase()];
+  if (Array.isArray(value)) return value[0]?.trim();
+  return typeof value === "string" ? value.trim() : undefined;
+}
+
+function headerBoolean(req: express.Request, name: string) {
+  const value = headerString(req, name);
+  if (!value) return undefined;
+  return ["1", "true", "yes", "on"].includes(value.toLowerCase());
+}
+
+function headerNumber(req: express.Request, name: string) {
+  const value = headerString(req, name);
+  if (!value) return undefined;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : undefined;
+}
+
+function getProviderConfig(req: express.Request): ProviderRuntimeConfig | undefined {
+  const provider = headerString(req, "x-zynx-llm-provider");
+  const requireProvider = headerBoolean(req, "x-zynx-llm-require-provider");
+  const timeoutMs = headerNumber(req, "x-zynx-llm-timeout-ms");
+  const openaiBaseUrl = headerString(req, "x-openai-base-url");
+  const openaiModel = headerString(req, "x-openai-model");
+  const openaiApiKey = headerString(req, "x-openai-api-key") || headerString(req, "x-zynx-openai-api-key");
+
+  const config = {
+    provider,
+    requireProvider,
+    timeoutMs,
+    openaiBaseUrl,
+    openaiModel,
+    openaiApiKey
+  };
+
+  return Object.values(config).some((value) => value !== undefined && value !== "")
+    ? config
+    : undefined;
 }
 
 // ─── Guards ───────────────────────────────────────────────────────────────────
@@ -89,6 +133,18 @@ function auditLog(event: { agentId: string; tenantId: string; userId: string; ac
 // ─── Routes ───────────────────────────────────────────────────────────────────
 
 // Health check
+app.get("/", (_req, res) => {
+  res.sendFile(path.join(repoRoot, "zynx-mcp-dashboard.html"));
+});
+
+app.get("/dashboard", (_req, res) => {
+  res.sendFile(path.join(repoRoot, "zynx-mcp-dashboard.html"));
+});
+
+app.get("/zynx-mcp", (_req, res) => {
+  res.sendFile(path.join(repoRoot, "zynx-mcp-dashboard.html"));
+});
+
 app.get("/health", (_req, res) => {
   res.json({ ok: true, service: "zynx-agent-backend", version: "0.1.0" });
 });
@@ -138,7 +194,11 @@ app.post("/agents/:agentId/invoke", async (req, res) => {
     assertRole(meta, auth.roles);
 
     // Execute
-    const result = await invokeAgentHandler(agentId, payload.input, auth);
+    const result = await invokeAgentHandler(agentId, payload.input, {
+      tenantId: auth.tenantId,
+      userId: auth.userId,
+      providerConfig: getProviderConfig(req)
+    });
     const durationMs = Date.now() - startMs;
 
     // Audit
@@ -204,5 +264,5 @@ app.listen(agentBackendPort, () => {
   console.log(`   Agents:       http://localhost:${agentBackendPort}/agents`);
   console.log(`   Invoke:       POST http://localhost:${agentBackendPort}/agents/:agentId/invoke`);
   console.log(`   Agent Health: GET  http://localhost:${agentBackendPort}/agents/:agentId/health`);
-  console.log(`   CORS origin:  ${corsOrigin}`);
+  console.log(`   CORS origin:  ${describeCorsOrigins()}`);
 });

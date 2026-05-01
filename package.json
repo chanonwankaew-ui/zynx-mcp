@@ -21,6 +21,7 @@
     "start:backend": "node dist/backend.js"
   },
   "dependencies": {
+    "@intercom/messenger-js-sdk": "^0.0.19",
     "@modelcontextprotocol/sdk": "1.29.0",
     "cors": "2.8.6",
     "dotenv": "16.6.1",
