@@ -47,6 +47,24 @@ Production-oriented workspace for the Zynx MCP wrapper, local agent backend, Age
 | `get_agent_health` | `GET /agents/:agentId/health` |
 | `list_agents` | `GET /agents` |
 
+## MCP Prompts
+
+The MCP wrapper also publishes IDE-friendly prompt templates:
+
+| MCP prompt | Purpose |
+|---|---|
+| `invoke-deeja` | Few-shot template for invoking Deeja |
+| `invoke-task-planner` | Few-shot template for workflow planning |
+| `invoke-validator` | Template for validation requests |
+| `invoke-reviewer` | Template for review requests |
+| `agent-health-check` | Template for checking one or more agents |
+
+IDE setup notes live in:
+
+```text
+docs/runbooks/ide-mcp-setup.md
+```
+
 ## Run Locally
 
 ```bash

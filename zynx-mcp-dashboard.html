@@ -674,7 +674,7 @@
       </div>
       <div class="field">
         <label>MCP WRAPPER URL</label>
-        <input type="text" id="mcpUrl" value="http://localhost:8790/mcp" placeholder="http://localhost:3000/mcp"/>
+        <input type="text" id="mcpUrl" value="http://localhost:3000/mcp" placeholder="http://localhost:3000/mcp"/>
       </div>
       <div class="field">
         <label>SERVICE TOKEN (optional)</label>
@@ -896,14 +896,29 @@ let lastResponse = null;
 let logEntries = [];
 let healthResults = {};
 const CONFIG_STORE_KEY = 'zynx_mcp_dashboard_config_v1';
+const CONNECT_TIMEOUT_MS = 5000;
+
+function runtimeBackendUrl() {
+  if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
+    return window.location.origin;
+  }
+  return 'http://localhost:8790';
+}
+
+function runtimeMcpUrl() {
+  if ((window.location.protocol === 'http:' || window.location.protocol === 'https:') && window.location.port === '3000') {
+    return `${window.location.origin}/mcp`;
+  }
+  return 'http://localhost:3000/mcp';
+}
 
 // ── Helpers ───────────────────────────────────────────────────────────────
 const $ = id => document.getElementById(id);
 
 function getConfig() {
   return {
-    backendUrl: $('backendUrl').value.replace(/\/$/, ''),
-    mcpUrl: $('mcpUrl').value,
+    backendUrl: $('backendUrl').value.trim().replace(/\/$/, ''),
+    mcpUrl: $('mcpUrl').value.trim().replace(/\/$/, ''),
     token: $('serviceToken').value.trim(),
     tenantId: $('tenantId').value.trim() || 'dev',
     userId: $('userId').value.trim() || 'mcp-console'
@@ -933,16 +948,42 @@ function saveUiConfig() {
 function loadUiConfig() {
   try {
     const raw = localStorage.getItem(CONFIG_STORE_KEY);
-    if (!raw) return;
-    const config = JSON.parse(raw);
-    for (const [key, value] of Object.entries(config)) {
-      const el = $(key);
-      if (!el) continue;
-      if (el.type === 'checkbox') el.checked = Boolean(value);
-      else el.value = String(value);
+    if (raw) {
+      const config = JSON.parse(raw);
+      for (const [key, value] of Object.entries(config)) {
+        const el = $(key);
+        if (!el) continue;
+        if (el.type === 'checkbox') el.checked = Boolean(value);
+        else el.value = String(value);
+      }
     }
   } catch {
     localStorage.removeItem(CONFIG_STORE_KEY);
+  }
+  applyRuntimeDefaults();
+}
+
+function isLocalBackendUrl(value) {
+  try {
+    const url = new URL(value);
+    return ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname);
+  } catch {
+    return false;
+  }
+}
+
+function applyRuntimeDefaults() {
+  const backend = $('backendUrl');
+  const mcp = $('mcpUrl');
+  const currentRuntimeBackend = runtimeBackendUrl();
+  const currentRuntimeMcp = runtimeMcpUrl();
+
+  if (!backend.value.trim() || (window.location.protocol !== 'file:' && isLocalBackendUrl(backend.value))) {
+    backend.value = currentRuntimeBackend;
+  }
+
+  if (!mcp.value.trim() || mcp.value.trim().replace(/\/$/, '') === `${backend.value.trim().replace(/\/$/, '')}/mcp`) {
+    mcp.value = currentRuntimeMcp;
   }
 }
 
@@ -1048,6 +1089,29 @@ function escHtml(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
+async function fetchJson(url, options = {}, timeoutMs = CONNECT_TIMEOUT_MS) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const res = await fetch(url, { ...options, signal: controller.signal });
+    const text = await res.text();
+    let data = null;
+    try {
+      data = text ? JSON.parse(text) : null;
+    } catch {
+      data = { raw: text };
+    }
+    return { res, data };
+  } catch (err) {
+    if (err.name === 'AbortError') {
+      throw new Error(`Request timed out after ${timeoutMs}ms`);
+    }
+    throw err;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 // ── JSON Syntax Highlight ─────────────────────────────────────────────────
 function highlightJson(obj) {
   const json = JSON.stringify(obj, null, 2);
@@ -1065,11 +1129,10 @@ async function connectBackend() {
   setStatus('loading', 'CONNECTING...');
   addLog('info', `Connecting to ${getConfig().backendUrl}`);
   try {
-    const res = await fetch(`${getConfig().backendUrl}/health`, {
+    const { res, data } = await fetchJson(`${getConfig().backendUrl}/health`, {
       headers: makeHeaders()
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
+    }, CONNECT_TIMEOUT_MS);
+    if (!res.ok) throw new Error(`HTTP ${res.status}: ${data?.error || data?.raw || 'health check failed'}`);
     connected = true;
     setStatus('ok', `CONNECTED · ${data.service || 'zynx-backend'} v${data.version || '?'}`);
     addLog('ok', `Backend connected: ${JSON.stringify(data)}`);
@@ -1088,8 +1151,8 @@ async function connectBackend() {
 async function loadAgents() {
   if (!connected) { showToast('Connect first'); return; }
   try {
-    const res = await fetch(`${getConfig().backendUrl}/agents`, { headers: makeHeaders() });
-    const data = await res.json();
+    const { res, data } = await fetchJson(`${getConfig().backendUrl}/agents`, { headers: makeHeaders() });
+    if (!res.ok) throw new Error(`HTTP ${res.status}: ${data?.error || data?.raw || 'agent registry unavailable'}`);
     agents = data.agents || [];
     addLog('ok', `Loaded ${agents.length} agents from registry`);
     renderAgentList();
@@ -1194,10 +1257,10 @@ function formatUptime(s) {
 async function checkHealth(agentId) {
   if (!connected) { showToast('Connect first'); return; }
   try {
-    const res = await fetch(`${getConfig().backendUrl}/agents/${agentId}/health`, {
+    const { res, data } = await fetchJson(`${getConfig().backendUrl}/agents/${agentId}/health`, {
       headers: makeHeaders()
     });
-    const data = await res.json();
+    if (!res.ok) throw new Error(`HTTP ${res.status}: ${data?.error || data?.raw || 'health check failed'}`);
     healthResults[agentId] = data;
     addLog(data.alive ? 'ok' : 'warn', `Health ${agentId}: alive=${data.alive} status=${data.status}`);
     renderHealthTable();
@@ -1268,13 +1331,12 @@ async function invokeAgent() {
 
   const start = Date.now();
   try {
-    const res = await fetch(`${getConfig().backendUrl}/agents/${agentId}/invoke`, {
+    const { res, data } = await fetchJson(`${getConfig().backendUrl}/agents/${agentId}/invoke`, {
       method: 'POST',
       headers: makeHeaders(true),
       body: JSON.stringify(body)
-    });
+    }, timeoutMs);
     const elapsed = Date.now() - start;
-    const data = await res.json();
     lastResponse = data;
 
     if (!res.ok) {
@@ -1345,7 +1407,11 @@ function switchTab(name, el) {
 // init log
 loadUiConfig();
 wireConfigPersistence();
-addLog('info', 'Zynx MCP Console initialized. Enter backend URL and click CONNECT.');
+addLog('info', `Zynx MCP Console initialized. Backend URL: ${getConfig().backendUrl}`);
+if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
+  addLog('info', 'Auto-connect enabled because the dashboard is served over HTTP.');
+  connectBackend();
+}
 </script>
 </body>
 </html>
