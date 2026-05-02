@@ -1,30 +1,28 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Zynx MCP Live Console</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Zynx MCP — Agent Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Syne:wght@400;500;700&display=swap" rel="stylesheet" />
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
-
   :root {
-    --bg: #0a0c0e;
-    --bg2: #111418;
-    --bg3: #181c22;
-    --border: #1e2530;
-    --border2: #252d3a;
-    --purple: #7f6cff;
-    --purple2: #5a49e0;
-    --teal: #1db975;
-    --teal2: #0e8a52;
-    --amber: #e6a020;
-    --red: #e24b4b;
-    --blue: #3a8add;
-    --text: #c8d0dc;
-    --text2: #6a7585;
-    --text3: #3a4555;
+    --bg: #0c0e11;
+    --surface: #13161b;
+    --surface2: #1a1e25;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.12);
+    --text: #e8eaf0;
+    --muted: #6b7280;
+    --hint: #3d4450;
+    --accent: #4ade80;
+    --accent2: #818cf8;
+    --accent3: #fb923c;
+    --warn: #fbbf24;
+    --danger: #f87171;
     --mono: 'IBM Plex Mono', monospace;
-    --sans: 'IBM Plex Sans', sans-serif;
+    --sans: 'Syne', sans-serif;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -33,1196 +31,371 @@
     background: var(--bg);
     color: var(--text);
     font-family: var(--sans);
+    font-size: 14px;
     min-height: 100vh;
-    overflow-x: hidden;
+    line-height: 1.6;
   }
-
-  /* scanline overlay */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background: repeating-linear-gradient(
-      0deg,
-      transparent,
-      transparent 2px,
-      rgba(0,0,0,0.03) 2px,
-      rgba(0,0,0,0.03) 4px
-    );
-    pointer-events: none;
-    z-index: 9999;
-  }
-
-  /* ── Header ── */
-  header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 14px 24px;
-    background: var(--bg2);
-    border-bottom: 1px solid var(--border);
-    position: sticky;
-    top: 0;
-    z-index: 100;
-  }
-
-  .logo {
-    font-family: var(--mono);
-    font-size: 13px;
-    font-weight: 600;
-    letter-spacing: 0.12em;
-    color: var(--purple);
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .logo-dot {
-    width: 8px; height: 8px;
-    border-radius: 50%;
-    background: var(--teal);
-    box-shadow: 0 0 8px var(--teal);
-    animation: pulse 2s infinite;
-  }
-
-  @keyframes pulse {
-    0%, 100% { opacity: 1; box-shadow: 0 0 8px var(--teal); }
-    50% { opacity: 0.5; box-shadow: 0 0 2px var(--teal); }
-  }
-
-  .header-status {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--text2);
-  }
-
-  .status-dot {
-    width: 6px; height: 6px;
-    border-radius: 50%;
-    background: var(--text3);
-  }
-  .status-dot.ok { background: var(--teal); box-shadow: 0 0 6px var(--teal); }
-  .status-dot.err { background: var(--red); box-shadow: 0 0 6px var(--red); }
-  .status-dot.loading { background: var(--amber); animation: pulse 0.8s infinite; }
 
   /* ── Layout ── */
-  .layout {
+  .shell {
     display: grid;
-    grid-template-columns: 300px 1fr;
-    min-height: calc(100vh - 49px);
+    grid-template-columns: 220px 1fr;
+    grid-template-rows: 56px 1fr;
+    min-height: 100vh;
   }
+
+  /* ── Topbar ── */
+  .topbar {
+    grid-column: 1 / -1;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    gap: 12px;
+    background: var(--surface);
+  }
+  .logo-mark {
+    width: 28px; height: 28px;
+    background: var(--accent);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .logo-mark svg { width: 16px; height: 16px; }
+  .logo-text { font-size: 15px; font-weight: 700; letter-spacing: -0.02em; }
+  .logo-text span { color: var(--accent); }
+  .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 16px; }
+  .server-badge {
+    font-family: var(--mono); font-size: 11px;
+    background: var(--surface2); border: 1px solid var(--border2);
+    border-radius: 4px; padding: 3px 8px; color: var(--muted);
+  }
+  .server-badge b { color: var(--accent); font-weight: 500; }
+  #last-update { font-size: 11px; color: var(--hint); font-family: var(--mono); }
 
   /* ── Sidebar ── */
-  aside {
-    background: var(--bg2);
+  .sidebar {
+    background: var(--surface);
     border-right: 1px solid var(--border);
     padding: 20px 0;
-    display: flex;
-    flex-direction: column;
-    gap: 0;
+    display: flex; flex-direction: column; gap: 4px;
   }
-
-  .section-label {
-    font-family: var(--mono);
-    font-size: 9px;
-    letter-spacing: 0.2em;
-    color: var(--text3);
-    text-transform: uppercase;
-    padding: 0 18px 8px;
-    margin-top: 16px;
+  .nav-section { padding: 0 12px; margin: 12px 0 4px; font-size: 10px; letter-spacing: .1em; color: var(--hint); text-transform: uppercase; }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 16px; cursor: pointer; border-radius: 0;
+    font-size: 13px; color: var(--muted); transition: all .15s;
+    border-left: 2px solid transparent;
   }
-  .section-label:first-child { margin-top: 0; }
-
-  /* config form */
-  .config-group {
-    padding: 0 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .field label {
-    display: block;
-    font-family: var(--mono);
-    font-size: 10px;
-    color: var(--text2);
-    margin-bottom: 4px;
-    letter-spacing: 0.08em;
-  }
-
-  .field input, .field select {
-    width: 100%;
-    background: var(--bg3);
-    border: 1px solid var(--border2);
-    border-radius: 4px;
-    padding: 7px 10px;
-    color: var(--text);
-    font-family: var(--mono);
-    font-size: 11px;
-    outline: none;
-    transition: border-color 0.15s;
-  }
-
-  .field input:focus, .field select:focus {
-    border-color: var(--purple);
-  }
-
-  .field input[type="password"] { letter-spacing: 0.1em; }
-
-  .field-hint {
-    font-family: var(--mono);
-    font-size: 9px;
-    color: var(--text3);
-    line-height: 1.45;
-    margin-top: 4px;
-  }
-
-  .field-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-  }
-
-  .check-field {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    min-height: 30px;
-    font-family: var(--mono);
-    font-size: 10px;
-    color: var(--text2);
-  }
-
-  .check-field input {
-    width: 14px;
-    height: 14px;
-    accent-color: var(--purple);
-  }
-
-  .btn {
-    font-family: var(--mono);
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.08em;
-    padding: 8px 14px;
-    border-radius: 4px;
-    border: none;
-    cursor: pointer;
-    transition: all 0.15s;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    white-space: nowrap;
-  }
-
-  .btn-primary {
-    background: var(--purple);
-    color: #fff;
-  }
-  .btn-primary:hover { background: var(--purple2); }
-
-  .btn-secondary {
-    background: var(--bg3);
-    color: var(--text);
-    border: 1px solid var(--border2);
-  }
-  .btn-secondary:hover { border-color: var(--purple); color: var(--purple); }
-
-  .btn-teal {
-    background: var(--teal2);
-    color: #fff;
-  }
-  .btn-teal:hover { background: var(--teal); }
-
-  .btn-danger {
-    background: transparent;
-    color: var(--red);
-    border: 1px solid var(--red);
-    opacity: 0.7;
-  }
-  .btn-danger:hover { opacity: 1; background: rgba(226,75,75,0.1); }
-
-  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
-
-  .sidebar-btn-row {
-    padding: 0 16px;
-    display: flex;
-    gap: 6px;
-  }
-  .sidebar-btn-row .btn { flex: 1; justify-content: center; }
-
-  /* agent list */
-  .agent-list {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    padding: 0 8px;
-    max-height: 320px;
-    overflow-y: auto;
-  }
-
-  .agent-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 6px 10px;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background 0.1s;
-    border: 1px solid transparent;
-  }
-  .agent-item:hover { background: var(--bg3); }
-  .agent-item.active {
-    background: var(--bg3);
-    border-color: var(--border2);
-  }
-
-  .agent-dot {
-    width: 6px; height: 6px;
-    border-radius: 50%;
-    flex-shrink: 0;
-  }
-
-  .agent-name {
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--text);
-    flex: 1;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .agent-cat {
-    font-family: var(--mono);
-    font-size: 9px;
-    color: var(--text3);
-    letter-spacing: 0.05em;
-  }
-
-  .sidebar-divider {
-    margin: 16px 0 0;
-    border: none;
-    border-top: 1px solid var(--border);
-  }
+  .nav-item:hover { color: var(--text); background: var(--surface2); }
+  .nav-item.active { color: var(--text); background: var(--surface2); border-left-color: var(--accent); }
+  .nav-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--hint); flex-shrink: 0; }
+  .nav-dot.green { background: var(--accent); }
+  .nav-dot.purple { background: var(--accent2); }
+  .nav-dot.orange { background: var(--accent3); }
 
   /* ── Main ── */
-  main {
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-  }
+  .main { padding: 28px 32px; overflow-y: auto; }
 
-  /* tabs */
-  .tabs {
-    display: flex;
-    gap: 0;
-    background: var(--bg2);
-    border-bottom: 1px solid var(--border);
-    padding: 0 20px;
-  }
+  .page { display: none; }
+  .page.active { display: block; }
 
-  .tab {
-    font-family: var(--mono);
-    font-size: 11px;
-    letter-spacing: 0.06em;
-    color: var(--text2);
-    padding: 12px 16px;
-    cursor: pointer;
-    border-bottom: 2px solid transparent;
-    transition: all 0.15s;
-    user-select: none;
+  /* ── Stat row ── */
+  .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 28px; }
+  .stat-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 16px 18px;
   }
-  .tab:hover { color: var(--text); }
-  .tab.active {
-    color: var(--purple);
-    border-bottom-color: var(--purple);
+  .stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px; }
+  .stat-value { font-size: 26px; font-weight: 700; line-height: 1; margin-bottom: 4px; }
+  .stat-sub { font-size: 11px; color: var(--muted); font-family: var(--mono); }
+  .val-green { color: var(--accent); }
+  .val-purple { color: var(--accent2); }
+  .val-orange { color: var(--accent3); }
+  .val-muted { color: var(--text); }
+
+  /* ── Section header ── */
+  .section-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .section-title { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+  .refresh-btn {
+    font-family: var(--mono); font-size: 11px; background: transparent;
+    border: 1px solid var(--border2); color: var(--muted); padding: 4px 10px;
+    border-radius: 4px; cursor: pointer; transition: all .15s;
   }
+  .refresh-btn:hover { color: var(--text); border-color: var(--accent); }
+  .refresh-btn.spinning { color: var(--accent); }
 
-  /* panels */
-  .panel {
-    display: none;
-    flex: 1;
-    overflow: hidden;
-  }
-  .panel.active { display: flex; flex-direction: column; }
-
-  /* ── Invoke Panel ── */
-  .invoke-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    flex: 1;
-    overflow: hidden;
-    gap: 0;
-  }
-
-  .invoke-left {
-    border-right: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-  }
-
-  .panel-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 12px 16px;
-    border-bottom: 1px solid var(--border);
-    background: var(--bg2);
-    flex-shrink: 0;
-  }
-
-  .panel-title {
-    font-family: var(--mono);
-    font-size: 10px;
-    letter-spacing: 0.15em;
-    color: var(--text2);
-    text-transform: uppercase;
-  }
-
-  textarea {
-    flex: 1;
-    background: var(--bg);
-    border: none;
-    outline: none;
-    color: var(--text);
-    font-family: var(--mono);
-    font-size: 12px;
-    line-height: 1.6;
-    padding: 16px;
-    resize: none;
-    tab-size: 2;
-  }
-
-  .invoke-right {
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    position: relative;
-  }
-
-  .output-area {
-    flex: 1;
-    overflow-y: auto;
-    padding: 16px;
-    font-family: var(--mono);
-    font-size: 11.5px;
-    line-height: 1.65;
-    background: var(--bg);
-  }
-
-  .output-empty {
-    color: var(--text3);
-    font-family: var(--mono);
-    font-size: 11px;
-    text-align: center;
-    margin-top: 60px;
-    line-height: 1.8;
-  }
-
-  /* json syntax highlight */
-  .json-key { color: #7fa4ff; }
-  .json-str { color: #85d9a4; }
-  .json-num { color: #f0a060; }
-  .json-bool { color: #ff7fa4; }
-  .json-null { color: #888; }
-
-  /* response meta bar */
-  .response-meta {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 8px 16px;
-    background: var(--bg2);
-    border-top: 1px solid var(--border);
-    font-family: var(--mono);
-    font-size: 10px;
-    color: var(--text2);
-    flex-shrink: 0;
-  }
-
-  .meta-pill {
-    padding: 2px 8px;
-    border-radius: 3px;
-    font-size: 9px;
-    letter-spacing: 0.05em;
-    font-weight: 600;
-  }
-  .meta-pill.ok { background: rgba(29,185,117,0.15); color: var(--teal); }
-  .meta-pill.err { background: rgba(226,75,75,0.15); color: var(--red); }
-  .meta-pill.pending { background: rgba(230,160,32,0.15); color: var(--amber); }
-
-  /* loading spinner */
-  .spinner {
-    display: inline-block;
-    width: 12px; height: 12px;
-    border: 2px solid var(--border2);
-    border-top-color: var(--purple);
-    border-radius: 50%;
-    animation: spin 0.6s linear infinite;
-    vertical-align: middle;
-    margin-right: 6px;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  /* ── Agents Panel ── */
-  .agents-panel {
-    flex: 1;
-    overflow-y: auto;
-    padding: 20px;
-  }
-
-  .agents-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    gap: 10px;
-  }
-
+  /* ── Agent cards ── */
+  .agents-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; margin-bottom: 28px; }
   .agent-card {
-    background: var(--bg2);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 14px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 18px 20px;
+    transition: border-color .2s;
     cursor: pointer;
-    transition: all 0.15s;
-    position: relative;
-    overflow: hidden;
   }
-  .agent-card::before {
-    content: '';
-    position: absolute;
-    left: 0; top: 0; bottom: 0;
-    width: 2px;
+  .agent-card:hover { border-color: var(--border2); }
+  .agent-card.selected { border-color: var(--accent); }
+  .agent-card.status-error { border-color: rgba(248,113,113,.3); }
+  .agent-header { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+  .agent-avatar {
+    width: 40px; height: 40px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono); font-size: 12px; font-weight: 500; flex-shrink: 0;
   }
-  .agent-card:hover {
-    border-color: var(--border2);
-    background: var(--bg3);
-  }
+  .av-deeja { background: rgba(129,140,248,.15); color: var(--accent2); border: 1px solid rgba(129,140,248,.25); }
+  .av-planner { background: rgba(74,222,128,.15); color: var(--accent); border: 1px solid rgba(74,222,128,.25); }
+  .av-orch { background: rgba(251,146,60,.15); color: var(--accent3); border: 1px solid rgba(251,146,60,.25); }
+  .agent-name { font-size: 13px; font-weight: 500; font-family: var(--mono); margin-bottom: 2px; }
+  .agent-role { font-size: 11px; color: var(--muted); }
+  .agent-status { margin-left: auto; display: flex; align-items: center; gap: 6px; font-size: 11px; font-family: var(--mono); }
+  .pulse { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .pulse-on { background: var(--accent); box-shadow: 0 0 0 2px rgba(74,222,128,.2); animation: pulseAnim 2s infinite; }
+  .pulse-off { background: var(--danger); }
+  .pulse-loading { background: var(--warn); animation: pulseAnim 1s infinite; }
+  @keyframes pulseAnim { 0%,100%{opacity:1} 50%{opacity:.4} }
+  .metrics-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .metric-box { background: var(--surface2); border-radius: 7px; padding: 10px 12px; }
+  .metric-box-label { font-size: 10px; color: var(--muted); margin-bottom: 4px; font-family: var(--mono); }
+  .metric-box-val { font-size: 15px; font-weight: 500; font-family: var(--mono); }
+  .mval-green { color: var(--accent); }
+  .mval-warn { color: var(--warn); }
+  .mval-danger { color: var(--danger); }
+  .mval-muted { color: var(--hint); }
+  .error-msg { font-size: 11px; color: var(--danger); font-family: var(--mono); margin-top: 10px; padding: 8px 10px; background: rgba(248,113,113,.08); border-radius: 6px; border: 1px solid rgba(248,113,113,.15); }
 
-  .agent-card-name {
-    font-family: var(--mono);
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--text);
-    margin-bottom: 4px;
-  }
+  /* ── Tool & Prompt tables ── */
+  .list-table { width: 100%; border-collapse: collapse; margin-bottom: 28px; }
+  .list-table th { text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); padding: 0 12px 10px; border-bottom: 1px solid var(--border); font-weight: 500; }
+  .list-table td { padding: 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .list-table tr:last-child td { border-bottom: none; }
+  .list-table tr:hover td { background: var(--surface2); }
+  .mono-name { font-family: var(--mono); font-size: 12px; color: var(--text); }
+  .td-desc { font-size: 12px; color: var(--muted); line-height: 1.5; }
+  .badge { font-size: 10px; padding: 2px 8px; border-radius: 4px; font-family: var(--mono); font-weight: 500; white-space: nowrap; }
+  .badge-tool { background: rgba(129,140,248,.15); color: var(--accent2); border: 1px solid rgba(129,140,248,.2); }
+  .badge-prompt { background: rgba(74,222,128,.15); color: var(--accent); border: 1px solid rgba(74,222,128,.2); }
+  .badge-get { background: rgba(74,222,128,.12); color: var(--accent); border: 1px solid rgba(74,222,128,.2); }
+  .badge-post { background: rgba(129,140,248,.12); color: var(--accent2); border: 1px solid rgba(129,140,248,.2); }
+  .param-list { display: flex; flex-wrap: wrap; gap: 4px; }
+  .param-chip { font-family: var(--mono); font-size: 10px; background: var(--surface2); border: 1px solid var(--border2); border-radius: 3px; padding: 1px 6px; color: var(--muted); }
+  .param-chip.req { border-color: rgba(251,146,60,.3); color: var(--accent3); }
 
-  .agent-card-role {
-    font-size: 11px;
-    color: var(--text2);
-    margin-bottom: 8px;
-  }
+  /* ── Endpoints ── */
+  .endpoint-row { display: flex; align-items: center; gap: 12px; padding: 11px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 8px; }
+  .ep-path { font-family: var(--mono); font-size: 12px; flex: 1; }
+  .ep-desc { font-size: 12px; color: var(--muted); }
+  .ep-status { margin-left: auto; display: flex; align-items: center; gap: 6px; font-size: 11px; font-family: var(--mono); color: var(--muted); }
 
-  .agent-card-meta {
-    display: flex;
-    align-items: center;
-    gap: 8px;
+  /* ── Config panel ── */
+  .config-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 22px 24px; max-width: 560px; margin-bottom: 20px;
   }
+  .config-card h3 { font-size: 13px; font-weight: 500; margin-bottom: 16px; color: var(--text); }
+  .field-row { display: grid; grid-template-columns: 140px 1fr; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .field-label { font-size: 12px; color: var(--muted); font-family: var(--mono); }
+  .field-input {
+    background: var(--surface2); border: 1px solid var(--border2); border-radius: 6px;
+    color: var(--text); font-family: var(--mono); font-size: 12px; padding: 7px 10px;
+    outline: none; width: 100%; transition: border-color .15s;
+  }
+  .field-input:focus { border-color: var(--accent); }
+  .save-btn {
+    background: var(--accent); color: #0c0e11; font-family: var(--sans);
+    font-size: 13px; font-weight: 700; border: none; border-radius: 7px;
+    padding: 9px 20px; cursor: pointer; transition: opacity .15s; margin-top: 4px;
+  }
+  .save-btn:hover { opacity: .85; }
+  .cors-note { font-size: 11px; color: var(--muted); font-family: var(--mono); background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 10px 12px; margin-top: 14px; line-height: 1.7; }
+  .cors-note code { color: var(--accent3); }
 
-  .tag {
-    font-family: var(--mono);
-    font-size: 9px;
-    letter-spacing: 0.06em;
-    padding: 2px 7px;
-    border-radius: 3px;
-    background: var(--bg3);
-    border: 1px solid var(--border2);
-    color: var(--text2);
-    text-transform: uppercase;
-  }
-
-  .agent-card-route {
-    font-family: var(--mono);
-    font-size: 9px;
-    color: var(--text3);
-    margin-top: 8px;
-  }
-
-  /* ── Health Panel ── */
-  .health-panel {
-    flex: 1;
-    overflow-y: auto;
-    padding: 20px;
-  }
-
-  .health-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-family: var(--mono);
-    font-size: 11px;
-  }
-  .health-table th {
-    text-align: left;
-    padding: 8px 12px;
-    color: var(--text3);
-    font-weight: 500;
-    letter-spacing: 0.1em;
-    font-size: 9px;
-    text-transform: uppercase;
-    border-bottom: 1px solid var(--border);
-  }
-  .health-table td {
-    padding: 9px 12px;
-    border-bottom: 1px solid var(--border);
-    color: var(--text2);
-    vertical-align: middle;
-  }
-  .health-table tr:hover td { background: var(--bg2); }
-  .health-table td:first-child { color: var(--text); font-weight: 500; }
-
-  /* ── Log Panel ── */
-  .log-panel {
-    flex: 1;
-    overflow-y: auto;
-    padding: 12px 16px;
-    font-family: var(--mono);
-    font-size: 11px;
-    background: var(--bg);
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-  }
-
-  .log-line {
-    display: flex;
-    gap: 12px;
-    padding: 3px 0;
-    border-bottom: 1px solid rgba(255,255,255,0.02);
-    line-height: 1.5;
-  }
-  .log-time { color: var(--text3); flex-shrink: 0; width: 80px; }
-  .log-level { flex-shrink: 0; width: 50px; font-weight: 600; }
-  .log-level.info { color: var(--blue); }
-  .log-level.ok { color: var(--teal); }
-  .log-level.warn { color: var(--amber); }
-  .log-level.err { color: var(--red); }
-  .log-msg { color: var(--text); flex: 1; word-break: break-all; }
-
-  .log-empty {
-    color: var(--text3);
-    text-align: center;
-    margin-top: 40px;
-    font-size: 11px;
-  }
-
-  /* ── Scrollbar ── */
-  ::-webkit-scrollbar { width: 5px; height: 5px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
-  ::-webkit-scrollbar-thumb:hover { background: var(--text3); }
-
-  /* ── Toast ── */
-  #toast {
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%) translateY(60px);
-    background: var(--bg3);
-    border: 1px solid var(--border2);
-    border-radius: 6px;
-    padding: 10px 18px;
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--text);
-    z-index: 9000;
-    transition: transform 0.25s ease;
-    white-space: nowrap;
-  }
-  #toast.show { transform: translateX(-50%) translateY(0); }
-
-  /* ── Category colors ── */
-  .cat-core { color: #7f77dd; }
-  .cat-ui { color: #1db975; }
-  .cat-data { color: #378add; }
-  .cat-worker { color: #5a9a2a; }
-  .cat-biz { color: #d85a30; }
-  .cat-output { color: #185fa5; }
-
-  /* key-value section in response meta */
-  .meta-kv { display: flex; gap: 4px; align-items: center; }
-  .meta-kv span:first-child { color: var(--text3); }
-
-  /* ── Workflow Runs Panel ── */
-  .runs-panel {
-    flex: 1;
-    overflow-y: auto;
-    padding: 20px;
-  }
-
-  .run-card {
-    background: var(--bg2);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    margin-bottom: 8px;
-    overflow: hidden;
-    transition: border-color 0.15s;
-  }
-  .run-card:hover { border-color: var(--border2); }
-
-  .run-card-header {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 12px 14px;
-    cursor: pointer;
-    user-select: none;
-  }
-
-  .run-card-header:hover { background: var(--bg3); }
-
-  .run-mode-pill {
-    font-family: var(--mono);
-    font-size: 9px;
-    font-weight: 600;
-    letter-spacing: 0.08em;
-    padding: 2px 8px;
-    border-radius: 3px;
-    flex-shrink: 0;
-    text-transform: uppercase;
-  }
-  .run-mode-pill.dry-run { background: rgba(58,138,221,0.15); color: var(--blue); border: 1px solid rgba(58,138,221,0.3); }
-  .run-mode-pill.execute { background: rgba(29,185,117,0.15); color: var(--teal); border: 1px solid rgba(29,185,117,0.3); }
-  .run-mode-pill.unknown { background: rgba(106,117,133,0.1); color: var(--text2); border: 1px solid var(--border); }
-
-  .run-card-name {
-    font-family: var(--mono);
-    font-size: 12px;
-    color: var(--text);
-    flex: 1;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .run-card-date {
-    font-family: var(--mono);
-    font-size: 10px;
-    color: var(--text3);
-    flex-shrink: 0;
-  }
-
-  .run-card-stats {
-    display: flex;
-    gap: 8px;
-    flex-shrink: 0;
-  }
-
-  .run-stat {
-    font-family: var(--mono);
-    font-size: 9px;
-    padding: 1px 6px;
-    border-radius: 2px;
-  }
-  .run-stat.pass { background: rgba(29,185,117,0.12); color: var(--teal); }
-  .run-stat.fail { background: rgba(226,75,75,0.12); color: var(--red); }
-  .run-stat.warn { background: rgba(230,160,32,0.12); color: var(--amber); }
-  .run-stat.steps { background: rgba(127,108,255,0.12); color: var(--purple); }
-
-  .run-card-body {
-    display: none;
-    border-top: 1px solid var(--border);
-    padding: 14px;
-    background: var(--bg);
-  }
-  .run-card-body.open { display: block; }
-
-  /* ── Contract Validator Panel ── */
-  .validator-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    flex: 1;
-    overflow: hidden;
-  }
-
-  .validator-left {
-    border-right: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-  }
-
-  .validator-right {
-    display: flex;
-    flex-direction: column;
-    overflow-y: auto;
-    padding: 16px;
-    gap: 14px;
-    background: var(--bg);
-  }
-
-  .phase2-checklist {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-
-  .phase2-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 7px 10px;
-    border-radius: 4px;
-    background: var(--bg2);
-    border: 1px solid var(--border);
-    font-family: var(--mono);
-    font-size: 11px;
-  }
-
-  .phase2-icon { font-size: 13px; flex-shrink: 0; }
-  .phase2-label { flex: 1; color: var(--text2); }
-  .phase2-item.pass .phase2-icon { content: '✓'; color: var(--teal); }
-  .phase2-item.fail .phase2-icon { content: '✗'; color: var(--red); }
-  .phase2-item.na .phase2-icon { color: var(--text3); }
-
-  .val-section-title {
-    font-family: var(--mono);
-    font-size: 9px;
-    letter-spacing: 0.18em;
-    color: var(--text3);
-    text-transform: uppercase;
-    margin-bottom: 4px;
-  }
-
-  .val-msg-list {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    max-height: 220px;
-    overflow-y: auto;
-  }
-
-  .val-msg {
-    font-family: var(--mono);
-    font-size: 10px;
-    line-height: 1.5;
-    padding: 4px 8px;
-    border-radius: 3px;
-    word-break: break-word;
-  }
-  .val-msg.err { background: rgba(226,75,75,0.1); color: var(--red); border-left: 2px solid var(--red); }
-  .val-msg.warn { background: rgba(230,160,32,0.08); color: var(--amber); border-left: 2px solid var(--amber); }
-
-  .val-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-family: var(--mono);
-    font-size: 11px;
-    font-weight: 600;
-    padding: 6px 12px;
-    border-radius: 4px;
-  }
-  .val-badge.valid { background: rgba(29,185,117,0.15); color: var(--teal); border: 1px solid rgba(29,185,117,0.3); }
-  .val-badge.invalid { background: rgba(226,75,75,0.12); color: var(--red); border: 1px solid rgba(226,75,75,0.25); }
-  .val-badge.pending { background: rgba(106,117,133,0.1); color: var(--text2); border: 1px solid var(--border); }
-  /* ── Deeja Chat Panel ── */
-  .chat-panel {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    overflow: hidden;
-    background: var(--bg);
-  }
-  .chat-history {
-    flex: 1;
-    overflow-y: auto;
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
-  .chat-bubble {
-    max-width: 80%;
-    padding: 12px 16px;
-    border-radius: 8px;
-    font-family: var(--mono);
-    font-size: 12px;
-    line-height: 1.5;
-    word-break: break-word;
-  }
-  .chat-bubble.user {
-    align-self: flex-end;
-    background: rgba(127,108,255,0.15);
-    color: var(--text);
-    border: 1px solid rgba(127,108,255,0.3);
-    border-bottom-right-radius: 2px;
-  }
-  .chat-bubble.deeja {
-    align-self: flex-start;
-    background: var(--bg2);
-    color: var(--text);
-    border: 1px solid var(--border);
-    border-bottom-left-radius: 2px;
-  }
-  .chat-input-area {
-    display: flex;
-    gap: 12px;
-    padding: 16px;
-    background: var(--bg2);
-    border-top: 1px solid var(--border);
-  }
-  .chat-input {
-    flex: 1;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    color: var(--text);
-    font-family: var(--mono);
-    font-size: 12px;
-    padding: 12px;
-    resize: none;
-    outline: none;
-    max-height: 120px;
-  }
-  .chat-input:focus {
-    border-color: var(--purple);
-  }
-  .chat-card {
-    margin-top: 12px;
-    padding: 12px;
-    background: rgba(0,0,0,0.2);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-  }
-  .chat-card-title {
-    font-weight: 600;
-    color: var(--teal);
-    margin-bottom: 4px;
+  /* ── Responsive ── */
+  @media (max-width: 768px) {
+    .shell { grid-template-columns: 1fr; grid-template-rows: 56px auto 1fr; }
+    .sidebar { grid-row: 2; flex-direction: row; overflow-x: auto; padding: 8px 12px; border-right: none; border-bottom: 1px solid var(--border); flex-wrap: nowrap; }
+    .nav-section { display: none; }
+    .nav-item { white-space: nowrap; border-left: none; border-bottom: 2px solid transparent; padding: 6px 12px; }
+    .nav-item.active { border-bottom-color: var(--accent); background: transparent; }
+    .main { padding: 20px 16px; }
+    .stats-row { grid-template-columns: repeat(2, 1fr); }
   }
 </style>
 </head>
 <body>
 
-<!-- Header -->
-<header>
-  <div class="logo">
-    <div class="logo-dot" id="connDot"></div>
-    ZYNX MCP CONSOLE
-  </div>
-  <div class="header-status" id="headerStatus">
-    <div class="status-dot" id="statusDot"></div>
-    <span id="statusText">NOT CONNECTED</span>
-  </div>
-</header>
+<div class="shell">
 
-<!-- Layout -->
-<div class="layout">
+  <!-- Topbar -->
+  <header class="topbar">
+    <div class="logo-mark">
+      <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M3 8L7 4L11 8L7 12L3 8Z" fill="#0c0e11"/>
+        <path d="M7 4L13 8L7 12" stroke="#0c0e11" stroke-width="1.5" fill="none"/>
+      </svg>
+    </div>
+    <span class="logo-text">zynx<span>-mcp</span></span>
+    <div class="topbar-right">
+      <span class="server-badge">backend <b id="backend-url">:8790</b></span>
+      <span id="last-update">never synced</span>
+    </div>
+  </header>
 
   <!-- Sidebar -->
-  <aside>
-    <div class="section-label">BACKEND CONFIG</div>
-    <div class="config-group">
-      <div class="field">
-        <label>BACKEND URL</label>
-        <input type="text" id="backendUrl" value="http://localhost:8790" placeholder="http://localhost:8787"/>
-      </div>
-      <div class="field">
-        <label>MCP WRAPPER URL</label>
-        <input type="text" id="mcpUrl" value="http://localhost:3000/mcp" placeholder="http://localhost:3000/mcp"/>
-      </div>
-      <div class="field">
-        <label>SERVICE TOKEN (optional)</label>
-        <input type="password" id="serviceToken" placeholder="Bearer token or leave empty"/>
-      </div>
-      <div class="field">
-        <label>TENANT ID</label>
-        <input type="text" id="tenantId" value="dev"/>
-      </div>
-      <div class="field">
-        <label>USER ID</label>
-        <input type="text" id="userId" value="mcp-console"/>
-      </div>
+  <nav class="sidebar">
+    <span class="nav-section">Monitor</span>
+    <div class="nav-item active" onclick="showPage('overview',this)">
+      <span class="nav-dot green"></span> Overview
     </div>
+    <div class="nav-item" onclick="showPage('agents',this)">
+      <span class="nav-dot green"></span> Agents
+    </div>
+    <span class="nav-section">Registry</span>
+    <div class="nav-item" onclick="showPage('tools',this)">
+      <span class="nav-dot purple"></span> Tools
+    </div>
+    <div class="nav-item" onclick="showPage('prompts',this)">
+      <span class="nav-dot green"></span> Prompts
+    </div>
+    <div class="nav-item" onclick="showPage('endpoints',this)">
+      <span class="nav-dot orange"></span> Endpoints
+    </div>
+    <span class="nav-section">Settings</span>
+    <div class="nav-item" onclick="showPage('config',this)">
+      <span class="nav-dot" style="background:var(--hint)"></span> Config
+    </div>
+  </nav>
 
-    <hr class="sidebar-divider"/>
-    <div class="section-label" style="display:flex;justify-content:space-between;align-items:center;">
-      <span>LLM PROVIDER</span>
-      <div id="providerBadge" style="font-family:var(--mono);font-size:9px;padding:2px 6px;border-radius:3px;background:rgba(106,117,133,0.1);color:var(--text3);border:1px solid var(--border);">UNKNOWN</div>
-    </div>
-    <div class="config-group">
-      <div class="field">
-        <label>PROVIDER</label>
-        <select id="llmProvider">
-          <option value="local">local deterministic</option>
-          <option value="openai">openai responses</option>
-        </select>
-      </div>
-      <div class="field">
-        <label>OPENAI BASE URL</label>
-        <input type="text" id="openaiBaseUrl" value="https://api.openai.com/v1" autocomplete="off"/>
-      </div>
-      <div class="field">
-        <label>OPENAI MODEL</label>
-        <input type="text" id="openaiModel" placeholder="example: gpt-4.1-mini" autocomplete="off"/>
-      </div>
-      <div class="field">
-        <label>OPENAI API KEY</label>
-        <input type="password" id="openaiApiKey" placeholder="used for this invoke request only" autocomplete="off"/>
-        <div class="field-hint">Not saved by this HTML. Sent only to backend invoke requests.</div>
-      </div>
-      <div class="field-row">
-        <div class="field">
-          <label>LLM TIMEOUT MS</label>
-          <input type="number" id="llmTimeoutMs" value="30000"/>
+  <!-- Main -->
+  <main class="main">
+
+    <!-- ── Overview ── -->
+    <div class="page active" id="page-overview">
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-label">Agents online</div>
+          <div class="stat-value val-green" id="ov-online">—</div>
+          <div class="stat-sub" id="ov-online-sub">fetching...</div>
         </div>
-        <label class="check-field" style="align-self:end;">
-          <input type="checkbox" id="llmRequireProvider"/>
-          require provider
-        </label>
-      </div>
-      <button class="btn btn-secondary" onclick="clearOpenAIKey()" style="justify-content:center;">CLEAR KEY</button>
-    </div>
-
-    <div class="sidebar-btn-row" style="margin-top:10px;">
-      <button class="btn btn-primary" onclick="connectBackend()">▶ CONNECT</button>
-      <button class="btn btn-secondary" onclick="loadAgents()">↻ AGENTS</button>
-    </div>
-
-    <hr class="sidebar-divider"/>
-    <div class="section-label">AGENT REGISTRY</div>
-    <div class="agent-list" id="agentList">
-      <div style="padding:8px 10px;font-family:var(--mono);font-size:10px;color:var(--text3);">
-        Connect to load agents
-      </div>
-    </div>
-
-    <hr class="sidebar-divider"/>
-    <div class="section-label">QUICK ACTIONS</div>
-    <div class="config-group">
-      <div class="field">
-        <label>WORKFLOW FILE PATH</label>
-        <select id="workflowSelect">
-          <option value="workflows/nightly-governance-validation.json">nightly-governance-validation</option>
-          <option value="workflows/zynx-developer-mode-build.json">zynx-developer-mode-build</option>
-        </select>
-      </div>
-      <div class="sidebar-btn-row">
-        <button class="btn btn-teal" onclick="runHealthAll()" style="font-size:10px;">⚡ HEALTH ALL</button>
-      </div>
-    </div>
-  </aside>
-
-  <!-- Main content -->
-  <main>
-    <!-- Tabs -->
-    <div class="tabs">
-      <div class="tab active" onclick="switchTab('invoke', this)">INVOKE AGENT</div>
-      <div class="tab" onclick="switchTab('agents', this)">AGENT REGISTRY</div>
-      <div class="tab" onclick="switchTab('health', this)">HEALTH CHECK</div>
-      <div class="tab" onclick="switchTab('log', this)">AUDIT LOG</div>
-      <div class="tab" onclick="switchTab('runs', this)">WORKFLOW RUNS</div>
-      <div class="tab" onclick="switchTab('validator', this)">CONTRACT VALIDATOR</div>
-      <div class="tab" onclick="switchTab('deeja', this)">DEEJA CHAT</div>
-    </div>
-
-    <!-- ── INVOKE PANEL ── -->
-    <div class="panel active" id="panel-invoke">
-      <div class="invoke-grid">
-
-        <div class="invoke-left">
-          <div class="panel-header">
-            <span class="panel-title">REQUEST PAYLOAD</span>
-            <div style="display:flex;gap:6px;">
-              <button class="btn btn-secondary" onclick="formatJson()" style="font-size:10px;">{ } FORMAT</button>
-              <button class="btn btn-secondary" onclick="clearInput()" style="font-size:10px;">CLR</button>
-              <button class="btn btn-primary" id="invokeBtn" onclick="invokeAgent()" style="font-size:10px;" disabled>▶ INVOKE</button>
-            </div>
-          </div>
-
-          <!-- agent + options row -->
-          <div style="display:flex;gap:8px;padding:10px 16px;border-bottom:1px solid var(--border);background:var(--bg2);flex-shrink:0;">
-            <div style="flex:1;">
-              <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-bottom:4px;letter-spacing:0.1em;">AGENT ID</div>
-              <select id="agentSelect" style="width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:4px;padding:5px 8px;color:var(--text);font-family:var(--mono);font-size:11px;outline:none;" onchange="onAgentSelect()">
-                <option value="">— select agent —</option>
-              </select>
-            </div>
-            <div style="width:100px;">
-              <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-bottom:4px;letter-spacing:0.1em;">TIMEOUT MS</div>
-              <input type="number" id="timeoutMs" value="30000" style="width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:4px;padding:5px 8px;color:var(--text);font-family:var(--mono);font-size:11px;outline:none;"/>
-            </div>
-            <div style="width:80px;">
-              <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-bottom:4px;letter-spacing:0.1em;">MAX TOKENS</div>
-              <input type="number" id="maxTokens" value="2048" style="width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:4px;padding:5px 8px;color:var(--text);font-family:var(--mono);font-size:11px;outline:none;"/>
-            </div>
-          </div>
-
-          <textarea id="payloadInput" spellcheck="false" placeholder='{
-  "goal": "Run nightly governance check",
-  "task": "validate manifest and produce report"
-}'></textarea>
+        <div class="stat-card">
+          <div class="stat-label">Avg latency</div>
+          <div class="stat-value val-purple" id="ov-latency">—</div>
+          <div class="stat-sub">ms across agents</div>
         </div>
-
-        <div class="invoke-right">
-          <div class="panel-header">
-            <span class="panel-title">RESPONSE</span>
-            <div style="display:flex;gap:6px;">
-              <button class="btn btn-secondary" onclick="copyResponse()" style="font-size:10px;">⎘ COPY</button>
-              <button class="btn btn-secondary" onclick="clearOutput()" style="font-size:10px;">CLR</button>
-            </div>
-          </div>
-          <div class="output-area" id="outputArea">
-            <div class="output-empty">
-              ▸ Connect to backend and invoke an agent<br/>
-              <span style="font-size:10px;color:var(--text3);">Response will appear here</span>
-            </div>
-          </div>
-          <div class="response-meta" id="responseMeta" style="display:none;">
-            <div id="responseStatus" class="meta-pill pending">—</div>
-            <div class="meta-kv"><span>agent:</span><span id="metaAgent" style="color:var(--text);">—</span></div>
-            <div class="meta-kv"><span>ms:</span><span id="metaMs" style="color:var(--text);">—</span></div>
-            <div class="meta-kv"><span>tokens:</span><span id="metaTokens" style="color:var(--text);">—</span></div>
-            <div class="meta-kv"><span>model:</span><span id="metaModel" style="color:var(--text);">—</span></div>
-            <div class="meta-kv"><span>provider:</span><span id="metaProvider" style="color:var(--text);">—</span></div>
-            <div class="meta-kv"><span>remote:</span><span id="metaRemote" style="color:var(--text);">—</span></div>
-          </div>
+        <div class="stat-card">
+          <div class="stat-label">Total tools</div>
+          <div class="stat-value val-muted">3</div>
+          <div class="stat-sub">invoke · health · list</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Prompt templates</div>
+          <div class="stat-value val-orange">5</div>
+          <div class="stat-sub">deeja · planner · +3</div>
         </div>
       </div>
+
+      <div class="section-hd">
+        <span class="section-title">Agent health — live</span>
+        <button class="refresh-btn" id="refresh-btn" onclick="fetchAllHealth()">↺ refresh</button>
+      </div>
+      <div class="agents-grid" id="ov-agents-grid"></div>
     </div>
 
-    <!-- ── AGENTS PANEL ── -->
-    <div class="panel" id="panel-agents">
-      <div class="panel-header" style="flex-shrink:0;">
-        <span class="panel-title">REGISTERED AGENTS</span>
-        <button class="btn btn-secondary" onclick="loadAgents()" style="font-size:10px;">↻ REFRESH</button>
+    <!-- ── Agents detail ── -->
+    <div class="page" id="page-agents">
+      <div class="section-hd">
+        <span class="section-title">All agents</span>
+        <button class="refresh-btn" onclick="fetchAllHealth()">↺ refresh</button>
       </div>
-      <div class="agents-panel">
-        <div class="agents-grid" id="agentsGrid">
-          <div style="grid-column:1/-1;text-align:center;color:var(--text3);font-family:var(--mono);font-size:11px;padding:40px 0;">
-            Connect to backend to load agent registry
-          </div>
+      <div class="agents-grid" id="ag-agents-grid"></div>
+    </div>
+
+    <!-- ── Tools ── -->
+    <div class="page" id="page-tools">
+      <div class="section-hd"><span class="section-title">MCP tools</span></div>
+      <table class="list-table">
+        <thead><tr><th>Name</th><th>Description</th><th>Parameters</th><th>Type</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="mono-name">invoke_agent</span></td>
+            <td class="td-desc">Calls a Zynx agent (deeja, task-planner, orchestrator) with a payload. Supports SSE streaming.</td>
+            <td><div class="param-list"><span class="param-chip req">agent*</span><span class="param-chip req">payload*</span><span class="param-chip">stream</span></div></td>
+            <td><span class="badge badge-tool">tool</span></td>
+          </tr>
+          <tr>
+            <td><span class="mono-name">get_agent_health</span></td>
+            <td class="td-desc">Returns real-time metrics — uptime, memory, latency — for a named agent.</td>
+            <td><div class="param-list"><span class="param-chip req">agent*</span><span class="param-chip">verbose</span></div></td>
+            <td><span class="badge badge-tool">tool</span></td>
+          </tr>
+          <tr>
+            <td><span class="mono-name">list_agents</span></td>
+            <td class="td-desc">Fetches all registered agents from the Zynx Registry with metadata.</td>
+            <td><div class="param-list"><span class="param-chip">filter</span></div></td>
+            <td><span class="badge badge-tool">tool</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ── Prompts ── -->
+    <div class="page" id="page-prompts">
+      <div class="section-hd"><span class="section-title">Prompt templates</span></div>
+      <table class="list-table">
+        <thead><tr><th>Name</th><th>Description</th><th>Parameters</th></tr></thead>
+        <tbody id="prompts-tbody">
+          <tr><td><span class="mono-name">invoke-deeja</span></td><td class="td-desc">Thai/EN UI agent. Conversational interface, handles both Thai and English input.</td><td><div class="param-list"><span class="param-chip req">message*</span><span class="param-chip">context</span></div></td></tr>
+          <tr><td><span class="mono-name">invoke-task-planner</span></td><td class="td-desc">Auto-generates multi-step workflow plans from a high-level goal description.</td><td><div class="param-list"><span class="param-chip req">goal*</span><span class="param-chip">constraints</span></div></td></tr>
+          <tr><td><span class="mono-name">invoke-validator</span></td><td class="td-desc">Validates data or contracts against a schema or rule set.</td><td><div class="param-list"><span class="param-chip req">input*</span><span class="param-chip">schema</span></div></td></tr>
+          <tr><td><span class="mono-name">invoke-reviewer</span></td><td class="td-desc">Safety and code review — checks security issues, logic errors, policy compliance.</td><td><div class="param-list"><span class="param-chip req">code*</span><span class="param-chip">mode</span></div></td></tr>
+          <tr><td><span class="mono-name">agent-health-check</span></td><td class="td-desc">System-wide health summary across all agents as a structured status table.</td><td><div class="param-list"><span class="param-chip">agents</span></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ── Endpoints ── -->
+    <div class="page" id="page-endpoints">
+      <div class="section-hd"><span class="section-title">Transport & endpoints</span></div>
+
+      <p style="font-size:12px;color:var(--muted);margin-bottom:16px;font-family:var(--mono);">MCP Server (stdio + SSE via http.ts)</p>
+      <div class="endpoint-row"><span class="badge badge-get">GET</span><span class="ep-path">/</span><span class="ep-desc">Server capabilities &amp; version</span><span class="ep-status"><span class="pulse pulse-on"></span>live</span></div>
+      <div class="endpoint-row"><span class="badge badge-post">POST</span><span class="ep-path">/mcp</span><span class="ep-desc">JSON-RPC — main MCP endpoint</span><span class="ep-status"><span class="pulse pulse-on"></span>live</span></div>
+      <div class="endpoint-row"><span class="badge badge-get">GET</span><span class="ep-path">/sse</span><span class="ep-desc">Server-Sent Events transport (http.ts)</span><span class="ep-status"><span class="pulse pulse-on"></span>live</span></div>
+      <div class="endpoint-row"><span class="badge badge-get">GET</span><span class="ep-path">/health</span><span class="ep-desc">MCP server health check</span><span class="ep-status"><span class="pulse pulse-on"></span>live</span></div>
+
+      <p style="font-size:12px;color:var(--muted);margin:20px 0 16px;font-family:var(--mono);">Agent Backend (port 8790)</p>
+      <div class="endpoint-row"><span class="badge badge-get">GET</span><span class="ep-path">/agents</span><span class="ep-desc">List all registered agents</span><span class="ep-status"><span class="pulse pulse-on"></span>live</span></div>
+      <div class="endpoint-row"><span class="badge badge-get">GET</span><span class="ep-path">/agents/:id/health</span><span class="ep-desc">Per-agent health metrics (this dashboard)</span><span class="ep-status"><span class="pulse pulse-on"></span>live</span></div>
+
+      <p style="font-size:12px;color:var(--muted);margin:20px 0 16px;font-family:var(--mono);">Frontend</p>
+      <div class="endpoint-row"><span class="badge badge-get">GET</span><span class="ep-path">:5173</span><span class="ep-desc">Workflow Mapper (Vite dev server)</span><span class="ep-status"><span class="pulse pulse-loading"></span>dev</span></div>
+    </div>
+
+    <!-- ── Config ── -->
+    <div class="page" id="page-config">
+      <div class="config-card">
+        <h3>Backend connection</h3>
+        <div class="field-row">
+          <span class="field-label">Base URL</span>
+          <input class="field-input" id="cfg-base-url" value="http://localhost:8790" placeholder="https://your-backend.com" />
         </div>
-      </div>
-    </div>
-
-    <!-- ── HEALTH PANEL ── -->
-    <div class="panel" id="panel-health">
-      <div class="panel-header" style="flex-shrink:0;">
-        <span class="panel-title">AGENT HEALTH STATUS</span>
-        <button class="btn btn-teal" onclick="runHealthAll()" style="font-size:10px;" id="healthAllBtn">⚡ CHECK ALL</button>
-      </div>
-      <div class="health-panel">
-        <table class="health-table" id="healthTable">
-          <thead>
-            <tr>
-              <th>AGENT ID</th>
-              <th>NAME</th>
-              <th>STATUS</th>
-              <th>ALIVE</th>
-              <th>LATENCY MS</th>
-              <th>MEMORY MB</th>
-              <th>UPTIME</th>
-              <th>ACTION</th>
-            </tr>
-          </thead>
-          <tbody id="healthBody">
-            <tr><td colspan="8" style="text-align:center;color:var(--text3);padding:40px;">Connect and click CHECK ALL</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- ── LOG PANEL ── -->
-    <div class="panel" id="panel-log">
-      <div class="panel-header" style="flex-shrink:0;">
-        <span class="panel-title">AUDIT LOG</span>
-        <button class="btn btn-danger" onclick="clearLog()" style="font-size:10px;">CLR</button>
-      </div>
-      <div class="log-panel" id="logPanel">
-        <div class="log-empty">No events yet</div>
-      </div>
-    </div>
-
-    <!-- ── WORKFLOW RUNS PANEL ── -->
-    <div class="panel" id="panel-runs">
-      <div class="panel-header" style="flex-shrink:0;">
-        <span class="panel-title">WORKFLOW RUN REPORTS</span>
-        <button class="btn btn-secondary" onclick="loadWorkflowRuns()" style="font-size:10px;">&#8635; REFRESH</button>
-      </div>
-      <div class="runs-panel" id="runsPanel">
-        <div style="text-align:center;color:var(--text3);font-family:var(--mono);font-size:11px;padding:40px 0;">Connect to backend to load run reports</div>
-      </div>
-    </div>
-
-    <!-- ── CONTRACT VALIDATOR PANEL ── -->
-    <div class="panel" id="panel-validator">
-      <div class="validator-grid">
-
-        <!-- left: input -->
-        <div class="validator-left">
-          <div class="panel-header">
-            <span class="panel-title">WORKFLOW JSON</span>
-            <div style="display:flex;gap:6px;">
-              <button class="btn btn-secondary" onclick="loadSampleWorkflow()" style="font-size:10px;">&#9656; SAMPLE</button>
-              <button class="btn btn-secondary" onclick="formatValidatorJson()" style="font-size:10px;">{ } FORMAT</button>
-              <button class="btn btn-primary" id="validateBtn" onclick="validateWorkflowJson()" style="font-size:10px;">✓ VALIDATE</button>
-            </div>
-          </div>
-          <textarea id="validatorInput" spellcheck="false" style="flex:1;background:var(--bg);border:none;outline:none;color:var(--text);font-family:var(--mono);font-size:12px;line-height:1.6;padding:16px;resize:none;tab-size:2;" placeholder='{
-  "workflow": {
-    "id": "my-workflow",
-    "name": "My Workflow",
-    "goal": "...",
-    "agents": [ { "id": "task-planner" } ]
-  }
-}'></textarea>
+        <div class="field-row">
+          <span class="field-label">Refresh interval</span>
+          <input class="field-input" id="cfg-interval" value="30" placeholder="seconds (0 = manual)" />
         </div>
-
-        <!-- right: results -->
-        <div class="validator-right" id="validatorResults">
-
-          <!-- status badge -->
-          <div>
-            <div class="val-section-title">VALIDATION STATUS</div>
-            <div class="val-badge pending" id="valStatusBadge">▸ Paste a workflow JSON and click VALIDATE</div>
-          </div>
-
-          <!-- Phase 2 checklist -->
-          <div>
-            <div class="val-section-title">PHASE 2 CONTRACT CHECKLIST</div>
-            <div class="phase2-checklist" id="phase2Checklist">
-              <div class="phase2-item na" id="p2-executedBy">   <span class="phase2-icon">◦</span><span class="phase2-label">executedBy</span><span style="font-size:9px;color:var(--text3);">not checked</span></div>
-              <div class="phase2-item na" id="p2-contextPassing"><span class="phase2-icon">◦</span><span class="phase2-label">contextPassing</span><span style="font-size:9px;color:var(--text3);">not checked</span></div>
-              <div class="phase2-item na" id="p2-decisionLog">  <span class="phase2-icon">◦</span><span class="phase2-label">decisionLog</span><span style="font-size:9px;color:var(--text3);">not checked</span></div>
-              <div class="phase2-item na" id="p2-failClass">    <span class="phase2-icon">◦</span><span class="phase2-label">failureClassification</span><span style="font-size:9px;color:var(--text3);">not checked</span></div>
-              <div class="phase2-item na" id="p2-compliant">    <span class="phase2-icon">◦</span><span class="phase2-label">Phase 2 Compliant</span><span style="font-size:9px;color:var(--text3);">not checked</span></div>
-            </div>
-          </div>
-
-          <!-- errors -->
-          <div id="valErrorsSection" style="display:none;">
-            <div class="val-section-title">ERRORS</div>
-            <div class="val-msg-list" id="valErrors"></div>
-          </div>
-
-          <!-- warnings -->
-          <div id="valWarningsSection" style="display:none;">
-            <div class="val-section-title">WARNINGS</div>
-            <div class="val-msg-list" id="valWarnings"></div>
-          </div>
-
+        <div class="field-row">
+          <span class="field-label">Auth header</span>
+          <input class="field-input" id="cfg-auth" value="" placeholder="Bearer <token> (optional)" />
         </div>
-      </div>
-    </div>
+        <button class="save-btn" onclick="saveConfig()">Save &amp; reconnect</button>
 
-    <!-- ── DEEJA CHAT PANEL ── -->
-    <div class="panel" id="panel-deeja">
-      <div class="chat-panel">
-        <div class="panel-header" style="flex-shrink:0; border-bottom: 1px solid var(--border);">
-          <span class="panel-title">DEEJA — ZYNX PERSONA LAYER</span>
-        </div>
-        <div class="chat-history" id="deejaChatHistory">
-          <div class="chat-bubble deeja">
-            สวัสดีค่ะ ฉันคือ Deeja ผู้ช่วยประสานงาน Zynx ของคุณ พิมพ์สิ่งที่คุณต้องการให้ฉันช่วยได้เลยค่ะ 😊
-          </div>
-        </div>
-        <div class="chat-input-area">
-          <textarea id="deejaInput" class="chat-input" rows="1" placeholder="Type your message... (Enter to send)"></textarea>
-          <button class="btn btn-primary" id="deejaSendBtn" onclick="sendDeejaMessage()" style="align-self: flex-end; padding: 12px 20px;">SEND</button>
+        <div class="cors-note">
+          <b style="color:var(--text);">CORS setup required on your agent backend</b><br/>
+          Add these headers to your Express / Hono server:<br/><br/>
+          <code>Access-Control-Allow-Origin: https://your-dashboard-domain.com</code><br/>
+          <code>Access-Control-Allow-Methods: GET, OPTIONS</code><br/>
+          <code>Access-Control-Allow-Headers: Authorization, Content-Type</code><br/><br/>
+          For Express: <code>app.use(cors({ origin: 'https://...' }))</code><br/>
+          For Hono: <code>app.use('*', cors({ origin: '...' }))</code>
         </div>
       </div>
     </div>
@@ -1230,877 +403,209 @@
   </main>
 </div>
 
-<div id="toast"></div>
-
 <script>
-// ── State ──────────────────────────────────────────────────────────────────
-let connected = false;
-let agents = [];
-let lastResponse = null;
-let logEntries = [];
-let healthResults = {};
-const CONFIG_STORE_KEY = 'zynx_mcp_dashboard_config_v1';
-const CONNECT_TIMEOUT_MS = 5000;
+const AGENTS = [
+  { id: 'deeja',       label: 'DJ', cls: 'av-deeja',   role: 'Thai/EN UI agent' },
+  { id: 'task-planner',label: 'TP', cls: 'av-planner', role: 'Workflow planner'  },
+  { id: 'orchestrator',label: 'OR', cls: 'av-orch',    role: 'Multi-agent orchestrator' },
+];
 
-function runtimeBackendUrl() {
-  if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
-    return window.location.origin;
-  }
-  return 'http://localhost:8790';
+let CONFIG = {
+  baseUrl:  localStorage.getItem('zynx_base_url')  || 'http://localhost:8790',
+  interval: parseInt(localStorage.getItem('zynx_interval') || '30'),
+  auth:     localStorage.getItem('zynx_auth')      || '',
+};
+
+let healthData = {};
+let refreshTimer = null;
+
+function saveConfig() {
+  CONFIG.baseUrl  = document.getElementById('cfg-base-url').value.replace(/\/$/, '');
+  CONFIG.interval = parseInt(document.getElementById('cfg-interval').value) || 0;
+  CONFIG.auth     = document.getElementById('cfg-auth').value;
+  localStorage.setItem('zynx_base_url',  CONFIG.baseUrl);
+  localStorage.setItem('zynx_interval',  CONFIG.interval);
+  localStorage.setItem('zynx_auth',      CONFIG.auth);
+  document.getElementById('backend-url').textContent = CONFIG.baseUrl;
+  scheduleRefresh();
+  fetchAllHealth();
 }
 
-function runtimeMcpUrl() {
-  if ((window.location.protocol === 'http:' || window.location.protocol === 'https:') && window.location.port === '3000') {
-    return `${window.location.origin}/mcp`;
-  }
-  return 'http://localhost:3000/mcp';
-}
-
-// ── Helpers ───────────────────────────────────────────────────────────────
-const $ = id => document.getElementById(id);
-
-function getConfig() {
-  return {
-    backendUrl: $('backendUrl').value.trim().replace(/\/$/, ''),
-    mcpUrl: $('mcpUrl').value.trim().replace(/\/$/, ''),
-    token: $('serviceToken').value.trim(),
-    tenantId: $('tenantId').value.trim() || 'dev',
-    userId: $('userId').value.trim() || 'mcp-console'
-  };
-}
-
-function saveUiConfig() {
-  try {
-    const config = {
-      backendUrl: $('backendUrl').value,
-      mcpUrl: $('mcpUrl').value,
-      tenantId: $('tenantId').value,
-      userId: $('userId').value,
-      llmProvider: $('llmProvider').value,
-      openaiBaseUrl: $('openaiBaseUrl').value,
-      openaiModel: $('openaiModel').value,
-      llmTimeoutMs: $('llmTimeoutMs').value,
-      llmRequireProvider: $('llmRequireProvider').checked
-    };
-
-    localStorage.setItem(CONFIG_STORE_KEY, JSON.stringify(config));
-  } catch {
-    addLog('warn', 'Browser storage unavailable; dashboard settings were not saved.');
-  }
-}
-
-function loadUiConfig() {
-  try {
-    const raw = localStorage.getItem(CONFIG_STORE_KEY);
-    if (raw) {
-      const config = JSON.parse(raw);
-      for (const [key, value] of Object.entries(config)) {
-        const el = $(key);
-        if (!el) continue;
-        if (el.type === 'checkbox') el.checked = Boolean(value);
-        else el.value = String(value);
-      }
-    }
-  } catch {
-    localStorage.removeItem(CONFIG_STORE_KEY);
-  }
-  applyRuntimeDefaults();
-}
-
-function isLocalBackendUrl(value) {
-  try {
-    const url = new URL(value);
-    return ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname);
-  } catch {
-    return false;
-  }
-}
-
-function applyRuntimeDefaults() {
-  const backend = $('backendUrl');
-  const mcp = $('mcpUrl');
-  const currentRuntimeBackend = runtimeBackendUrl();
-  const currentRuntimeMcp = runtimeMcpUrl();
-
-  if (!backend.value.trim() || (window.location.protocol !== 'file:' && isLocalBackendUrl(backend.value))) {
-    backend.value = currentRuntimeBackend;
-  }
-
-  if (!mcp.value.trim() || mcp.value.trim().replace(/\/$/, '') === `${backend.value.trim().replace(/\/$/, '')}/mcp`) {
-    mcp.value = currentRuntimeMcp;
-  }
-}
-
-function makeHeaders(includeProvider = false) {
-  const { token, tenantId, userId } = getConfig();
-  const h = {
-    'content-type': 'application/json',
-    'x-zynx-tenant-id': tenantId,
-    'x-zynx-user-id': userId,
-    'x-zynx-roles': 'user,admin'
-  };
-  if (token) h['authorization'] = `Bearer ${token}`;
-
-  if (includeProvider) {
-    const provider = $('llmProvider').value;
-    const model = $('openaiModel').value.trim();
-    const apiKey = $('openaiApiKey').value.trim();
-    const baseUrl = $('openaiBaseUrl').value.trim();
-    const llmTimeout = $('llmTimeoutMs').value.trim();
-
-    h['x-zynx-llm-provider'] = provider;
-    if ($('llmRequireProvider').checked) h['x-zynx-llm-require-provider'] = 'true';
-    if (llmTimeout) h['x-zynx-llm-timeout-ms'] = llmTimeout;
-    if (baseUrl) h['x-openai-base-url'] = baseUrl;
-    if (model) h['x-openai-model'] = model;
-    if (apiKey) h['x-openai-api-key'] = apiKey;
-  }
-
+function buildHeaders() {
+  const h = { 'Content-Type': 'application/json' };
+  if (CONFIG.auth) h['Authorization'] = CONFIG.auth;
   return h;
 }
 
-function clearOpenAIKey() {
-  $('openaiApiKey').value = '';
-  addLog('info', 'OpenAI API key field cleared');
-  showToast('Key cleared from browser field');
+async function fetchAgentHealth(agentId) {
+  const url = `${CONFIG.baseUrl}/agents/${agentId}/health`;
+  const res = await fetch(url, { headers: buildHeaders(), signal: AbortSignal.timeout(8000) });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return await res.json();
 }
 
-function wireConfigPersistence() {
-  [
-    'backendUrl',
-    'mcpUrl',
-    'tenantId',
-    'userId',
-    'llmProvider',
-    'openaiBaseUrl',
-    'openaiModel',
-    'llmTimeoutMs',
-    'llmRequireProvider'
-  ].forEach(id => {
-    const el = $(id);
-    el?.addEventListener('change', saveUiConfig);
-    el?.addEventListener('input', saveUiConfig);
+async function fetchAllHealth() {
+  const btn = document.getElementById('refresh-btn');
+  btn.classList.add('spinning');
+  btn.textContent = '↺ syncing...';
+
+  const results = await Promise.allSettled(
+    AGENTS.map(a => fetchAgentHealth(a.id).then(d => ({ id: a.id, data: d, ok: true })).catch(e => ({ id: a.id, error: e.message, ok: false })))
+  );
+
+  results.forEach(r => {
+    if (r.status === 'fulfilled') {
+      healthData[r.value.id] = r.value;
+    }
   });
-}
 
-function setStatus(state, text) {
-  const dot = $('statusDot');
-  const txt = $('statusText');
-  const conn = $('connDot');
-  dot.className = 'status-dot ' + state;
-  txt.textContent = text;
-  conn.style.background = state === 'ok' ? 'var(--teal)' :
-    state === 'err' ? 'var(--red)' : '#e6a020';
-  conn.style.boxShadow = state === 'ok' ? '0 0 8px var(--teal)' :
-    state === 'err' ? '0 0 8px var(--red)' : '0 0 8px #e6a020';
-}
+  renderAgentGrids();
+  updateOverviewStats();
 
-function showToast(msg, duration = 2200) {
-  const t = $('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), duration);
-}
-
-function addLog(level, msg) {
   const now = new Date();
-  const time = now.toTimeString().slice(0, 8);
-  logEntries.push({ time, level, msg });
-  renderLog();
+  document.getElementById('last-update').textContent = `synced ${now.toLocaleTimeString()}`;
+  btn.classList.remove('spinning');
+  btn.textContent = '↺ refresh';
 }
 
-function renderLog() {
-  const panel = $('logPanel');
-  if (!logEntries.length) {
-    panel.innerHTML = '<div class="log-empty">No events yet</div>';
-    return;
+function formatUptime(raw) {
+  if (raw === undefined || raw === null) return '—';
+  if (typeof raw === 'string') return raw;
+  if (typeof raw === 'number') {
+    const pct = parseFloat(raw);
+    if (pct > 1) return pct.toFixed(1) + '%';
+    return (pct * 100).toFixed(1) + '%';
   }
-  panel.innerHTML = logEntries.slice(-200).reverse().map(e =>
-    `<div class="log-line">
-      <span class="log-time">${e.time}</span>
-      <span class="log-level ${e.level}">${e.level.toUpperCase()}</span>
-      <span class="log-msg">${escHtml(e.msg)}</span>
-    </div>`
-  ).join('');
+  return String(raw);
 }
 
-function clearLog() {
-  logEntries = [];
-  renderLog();
-}
-
-function escHtml(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-
-async function fetchJson(url, options = {}, timeoutMs = CONNECT_TIMEOUT_MS) {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    const res = await fetch(url, { ...options, signal: controller.signal });
-    const text = await res.text();
-    let data = null;
-    try {
-      data = text ? JSON.parse(text) : null;
-    } catch {
-      data = { raw: text };
-    }
-    return { res, data };
-  } catch (err) {
-    if (err.name === 'AbortError') {
-      throw new Error(`Request timed out after ${timeoutMs}ms`);
-    }
-    throw err;
-  } finally {
-    clearTimeout(timer);
+function formatMemory(raw) {
+  if (raw === undefined || raw === null) return '—';
+  if (typeof raw === 'string') return raw;
+  if (typeof raw === 'number') {
+    if (raw > 1024) return (raw / 1024).toFixed(1) + ' GB';
+    return Math.round(raw) + ' MB';
   }
+  return String(raw);
 }
 
-// ── JSON Syntax Highlight ─────────────────────────────────────────────────
-function highlightJson(obj) {
-  const json = JSON.stringify(obj, null, 2);
-  return json
-    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-    .replace(/"([^"]+)"(\s*:)/g, '<span class="json-key">"$1"</span>$2')
-    .replace(/: "([^"]*)"/g, ': <span class="json-str">"$1"</span>')
-    .replace(/: (-?\d+\.?\d*)/g, ': <span class="json-num">$1</span>')
-    .replace(/: (true|false)/g, ': <span class="json-bool">$1</span>')
-    .replace(/: null/g, ': <span class="json-null">null</span>');
+function formatLatency(raw) {
+  if (raw === undefined || raw === null) return '—';
+  if (typeof raw === 'string') return raw;
+  if (typeof raw === 'number') return Math.round(raw) + ' ms';
+  return String(raw);
 }
 
-// ── Connect ───────────────────────────────────────────────────────────────
-async function connectBackend() {
-  setStatus('loading', 'CONNECTING...');
-  addLog('info', `Connecting to ${getConfig().backendUrl}`);
-  try {
-    const { res, data } = await fetchJson(`${getConfig().backendUrl}/health`, {
-      headers: makeHeaders()
-    }, CONNECT_TIMEOUT_MS);
-    if (!res.ok) throw new Error(`HTTP ${res.status}: ${data?.error || data?.raw || 'health check failed'}`);
-    connected = true;
-    setStatus('ok', `CONNECTED · ${data.service || 'zynx-backend'} v${data.version || '?'}`);
-    addLog('ok', `Backend connected: ${JSON.stringify(data)}`);
-    showToast('✓ Connected to backend');
-
-    // Update Provider Status Badge
-    const badge = $('providerBadge');
-    if (badge && data.provider) {
-      const p = data.provider;
-      if (p.provider === 'local') {
-        badge.textContent = 'LOCAL MODE';
-        badge.style.background = 'rgba(106,117,133,0.1)';
-        badge.style.color = 'var(--text2)';
-        badge.style.borderColor = 'var(--border)';
-      } else if (p.provider === 'openai') {
-        if (p.readyForLLM) {
-          badge.textContent = 'OpenAI READY';
-          badge.style.background = 'rgba(29,185,117,0.15)';
-          badge.style.color = 'var(--teal)';
-          badge.style.borderColor = 'rgba(29,185,117,0.3)';
-        } else {
-          badge.textContent = p.hasApiKey ? 'OpenAI MISSING MODEL' : 'OpenAI NO KEY';
-          badge.style.background = 'rgba(230,160,32,0.15)';
-          badge.style.color = 'var(--amber)';
-          badge.style.borderColor = 'rgba(230,160,32,0.3)';
-        }
-      }
-    }
-
-    await loadAgents();
-    $('invokeBtn').disabled = false;
-  } catch (err) {
-    connected = false;
-    setStatus('err', 'CONNECTION FAILED');
-    addLog('err', `Connection failed: ${err.message}`);
-    showToast('✗ Connection failed: ' + err.message);
-  }
+function latencyClass(raw) {
+  if (!raw && raw !== 0) return 'mval-muted';
+  const v = typeof raw === 'number' ? raw : parseFloat(raw);
+  if (isNaN(v)) return 'mval-muted';
+  if (v < 100) return 'mval-green';
+  if (v < 300) return 'mval-warn';
+  return 'mval-danger';
 }
 
-// ── Load Agents ───────────────────────────────────────────────────────────
-async function loadAgents() {
-  if (!connected) { showToast('Connect first'); return; }
-  try {
-    const { res, data } = await fetchJson(`${getConfig().backendUrl}/agents`, { headers: makeHeaders() });
-    if (!res.ok) throw new Error(`HTTP ${res.status}: ${data?.error || data?.raw || 'agent registry unavailable'}`);
-    agents = data.agents || [];
-    addLog('ok', `Loaded ${agents.length} agents from registry`);
-    renderAgentList();
-    renderAgentsGrid();
-    renderHealthTable();
-  } catch (err) {
-    addLog('err', `Failed to load agents: ${err.message}`);
-    showToast('Failed to load agents');
-  }
-}
+function buildAgentCard(agent, selectable) {
+  const h = healthData[agent.id];
+  let metricsHtml = '';
+  let statusHtml = '';
+  let errorHtml  = '';
 
-// Cat colors
-const catColor = {
-  core: '#7f77dd', ui: '#1db975', data: '#378add',
-  worker: '#5a9a2a', biz: '#d85a30', output: '#185fa5'
-};
-
-function renderAgentList() {
-  const list = $('agentList');
-  const sel = $('agentSelect');
-  list.innerHTML = agents.map((a, i) =>
-    `<div class="agent-item" onclick="selectAgent('${a.id}', this)" id="li-${a.id}">
-      <div class="agent-dot" style="background:${catColor[a.category]||'#888'};box-shadow:0 0 5px ${catColor[a.category]||'#888'}40;"></div>
-      <span class="agent-name">${a.id}</span>
-      <span class="agent-cat">${a.category||''}</span>
-    </div>`
-  ).join('');
-  // populate select
-  sel.innerHTML = '<option value="">— select agent —</option>' +
-    agents.map(a => `<option value="${a.id}">${a.id} — ${a.role||''}</option>`).join('');
-}
-
-function selectAgent(id, el) {
-  document.querySelectorAll('.agent-item').forEach(e => e.classList.remove('active'));
-  if (el) el.classList.add('active');
-  $('agentSelect').value = id;
-  onAgentSelect();
-  switchTab('invoke', document.querySelectorAll('.tab')[0]);
-}
-
-function onAgentSelect() {
-  const id = $('agentSelect').value;
-  if (!id) return;
-  // Pre-fill payload template
-  const a = agents.find(x => x.id === id);
-  const current = $('payloadInput').value.trim();
-  if (!current) {
-    $('payloadInput').value = JSON.stringify({
-      goal: `Invoke ${a?.name || id}`,
-      task: a?.role || 'Run agent task'
-    }, null, 2);
-  }
-  addLog('info', `Selected agent: ${id}`);
-}
-
-function renderAgentsGrid() {
-  const grid = $('agentsGrid');
-  if (!agents.length) {
-    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--text3);font-family:var(--mono);font-size:11px;padding:40px 0;">No agents loaded</div>';
-    return;
-  }
-  grid.innerHTML = agents.map(a => {
-    const col = catColor[a.category] || '#888';
-    return `<div class="agent-card" style="border-left:2px solid ${col}30;" onclick="selectAgent('${a.id}', null)">
-      <div style="position:absolute;left:0;top:0;bottom:0;width:2px;background:${col};"></div>
-      <div class="agent-card-name" style="color:${col};">${a.name || a.id}</div>
-      <div class="agent-card-role">${a.role || '—'}</div>
-      <div class="agent-card-meta">
-        <span class="tag">${a.category || '?'}</span>
-        <span class="tag">${a.status || 'published'}</span>
-        <span class="tag">${a.tenantScope || 'global'}</span>
-      </div>
-      <div class="agent-card-route">${a.backendRoute || '/agents/'+a.id+'/invoke'}</div>
-    </div>`;
-  }).join('');
-}
-
-function renderHealthTable() {
-  const tbody = $('healthBody');
-  tbody.innerHTML = agents.map(a => {
-    const h = healthResults[a.id];
-    return `<tr>
-      <td style="font-weight:600;color:var(--purple);">${a.id}</td>
-      <td>${a.name || '—'}</td>
-      <td>${h ? `<span class="meta-pill ${h.alive?'ok':'err'}">${h.status}</span>` : '<span style="color:var(--text3);">—</span>'}</td>
-      <td>${h ? `<span style="color:${h.alive?'var(--teal)':'var(--red)'};">${h.alive?'✓':'✗'}</span>` : '—'}</td>
-      <td>${h?.metrics?.latencyMs ?? '—'}</td>
-      <td>${h?.metrics?.memoryMb ?? '—'}</td>
-      <td>${h?.metrics?.uptime ? formatUptime(h.metrics.uptime) : '—'}</td>
-      <td><button class="btn btn-secondary" onclick="checkHealth('${a.id}')" style="font-size:9px;padding:4px 8px;">CHECK</button></td>
-    </tr>`;
-  }).join('') || '<tr><td colspan="8" style="text-align:center;color:var(--text3);padding:40px;">No agents loaded</td></tr>';
-}
-
-function formatUptime(s) {
-  if (s < 60) return s+'s';
-  if (s < 3600) return Math.floor(s/60)+'m';
-  return Math.floor(s/3600)+'h '+Math.floor((s%3600)/60)+'m';
-}
-
-// ── Health Check ──────────────────────────────────────────────────────────
-async function checkHealth(agentId) {
-  if (!connected) { showToast('Connect first'); return; }
-  try {
-    const { res, data } = await fetchJson(`${getConfig().backendUrl}/agents/${agentId}/health`, {
-      headers: makeHeaders()
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}: ${data?.error || data?.raw || 'health check failed'}`);
-    healthResults[agentId] = data;
-    addLog(data.alive ? 'ok' : 'warn', `Health ${agentId}: alive=${data.alive} status=${data.status}`);
-    renderHealthTable();
-  } catch (err) {
-    addLog('err', `Health check ${agentId} failed: ${err.message}`);
-    healthResults[agentId] = { alive: false, status: 'error', error: err.message };
-    renderHealthTable();
-  }
-}
-
-async function runHealthAll() {
-  if (!connected) { showToast('Connect first'); return; }
-  if (!agents.length) { await loadAgents(); }
-  addLog('info', `Running health check for ${agents.length} agents...`);
-  const btn = $('healthAllBtn');
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span>CHECKING...';
-  // Batch check (small concurrency)
-  const batch = 5;
-  for (let i = 0; i < agents.length; i += batch) {
-    const slice = agents.slice(i, i + batch);
-    await Promise.all(slice.map(a => checkHealth(a.id)));
-  }
-  btn.disabled = false;
-  btn.textContent = '⚡ CHECK ALL';
-  const alive = Object.values(healthResults).filter(h => h.alive).length;
-  addLog('ok', `Health check complete: ${alive}/${agents.length} alive`);
-  showToast(`Health check: ${alive}/${agents.length} alive`);
-  switchTab('health', document.querySelectorAll('.tab')[2]);
-}
-
-// ── Invoke ────────────────────────────────────────────────────────────────
-async function invokeAgent() {
-  const agentId = $('agentSelect').value;
-  if (!agentId) { showToast('Select an agent'); return; }
-  if (!connected) { showToast('Connect first'); return; }
-
-  let inputPayload = {};
-  try {
-    inputPayload = JSON.parse($('payloadInput').value || '{}');
-  } catch {
-    showToast('Invalid JSON payload');
-    return;
+  if (!h) {
+    statusHtml = `<span class="pulse pulse-loading"></span><span style="color:var(--warn)">fetching</span>`;
+    metricsHtml = `
+      <div class="metric-box"><div class="metric-box-label">uptime</div><div class="metric-box-val mval-muted">—</div></div>
+      <div class="metric-box"><div class="metric-box-label">memory</div><div class="metric-box-val mval-muted">—</div></div>
+      <div class="metric-box"><div class="metric-box-label">latency</div><div class="metric-box-val mval-muted">—</div></div>`;
+  } else if (!h.ok) {
+    statusHtml = `<span class="pulse pulse-off"></span><span style="color:var(--danger)">offline</span>`;
+    metricsHtml = `
+      <div class="metric-box"><div class="metric-box-label">uptime</div><div class="metric-box-val mval-muted">—</div></div>
+      <div class="metric-box"><div class="metric-box-label">memory</div><div class="metric-box-val mval-muted">—</div></div>
+      <div class="metric-box"><div class="metric-box-label">latency</div><div class="metric-box-val mval-muted">—</div></div>`;
+    errorHtml = `<div class="error-msg">Error: ${h.error}</div>`;
+  } else {
+    const d = h.data;
+    const uptime  = d.uptime  ?? d.uptimePercent  ?? d.uptime_pct;
+    const memory  = d.memory  ?? d.memoryMB       ?? d.memory_mb  ?? d.memUsage;
+    const latency = d.latency ?? d.latencyMs      ?? d.latency_ms ?? d.avgLatency;
+    statusHtml = `<span class="pulse pulse-on"></span><span style="color:var(--accent)">online</span>`;
+    metricsHtml = `
+      <div class="metric-box"><div class="metric-box-label">uptime</div><div class="metric-box-val mval-green">${formatUptime(uptime)}</div></div>
+      <div class="metric-box"><div class="metric-box-label">memory</div><div class="metric-box-val mval-warn">${formatMemory(memory)}</div></div>
+      <div class="metric-box"><div class="metric-box-label">latency</div><div class="metric-box-val ${latencyClass(latency)}">${formatLatency(latency)}</div></div>`;
   }
 
-  const timeoutMs = parseInt($('timeoutMs').value) || 30000;
-  const maxTokens = parseInt($('maxTokens').value) || 2048;
-
-  const body = {
-    input: inputPayload,
-    streaming: false,
-    options: { timeoutMs, maxTokens }
-  };
-
-  const btn = $('invokeBtn');
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span>INVOKING...';
-
-  $('outputArea').innerHTML = `<div style="color:var(--text3);font-family:var(--mono);font-size:11px;padding:8px 0;">
-    <span class="spinner"></span>Invoking <span style="color:var(--purple);">${agentId}</span>...
-  </div>`;
-  $('responseMeta').style.display = 'none';
-
-  addLog('info', `Invoking agent ${agentId} with ${JSON.stringify(inputPayload).slice(0,80)}...`);
-  if ($('llmProvider').value === 'openai' && !$('openaiApiKey').value.trim()) {
-    addLog('warn', 'OpenAI provider selected without an API key; backend should use env key or local fallback.');
-  }
-
-  const start = Date.now();
-  try {
-    const { res, data } = await fetchJson(`${getConfig().backendUrl}/agents/${agentId}/invoke`, {
-      method: 'POST',
-      headers: makeHeaders(true),
-      body: JSON.stringify(body)
-    }, timeoutMs);
-    const elapsed = Date.now() - start;
-    lastResponse = data;
-
-    if (!res.ok) {
-      $('outputArea').innerHTML = `<pre style="color:var(--red);">${highlightJson(data)}</pre>`;
-      $('responseMeta').style.display = 'flex';
-      $('responseStatus').className = 'meta-pill err';
-      $('responseStatus').textContent = `${res.status} ERR`;
-      $('metaAgent').textContent = agentId;
-      $('metaMs').textContent = elapsed;
-      $('metaTokens').textContent = '—';
-      $('metaModel').textContent = '—';
-      $('metaProvider').textContent = '—';
-      $('metaRemote').textContent = '—';
-      addLog('err', `Agent ${agentId} returned ${res.status}: ${data.error}`);
-    } else {
-      const providerExecution = data.output?.providerExecution || {};
-      $('outputArea').innerHTML = `<pre>${highlightJson(data)}</pre>`;
-      $('responseMeta').style.display = 'flex';
-      $('responseStatus').className = 'meta-pill ok';
-      $('responseStatus').textContent = '200 OK';
-      $('metaAgent').textContent = agentId;
-      $('metaMs').textContent = (data.meta?.durationMs ?? elapsed) + 'ms';
-      $('metaTokens').textContent = data.meta?.tokensUsed ?? '—';
-      $('metaModel').textContent = data.meta?.modelUsed ?? '—';
-      $('metaProvider').textContent = providerExecution.provider ?? 'local';
-      $('metaRemote').textContent = providerExecution.usedRemoteProvider ? 'yes' : 'no';
-      if (providerExecution.error) addLog('warn', `Provider fallback: ${providerExecution.error}`);
-      addLog('ok', `Agent ${agentId} responded in ${elapsed}ms — tokens:${data.meta?.tokensUsed||0} model:${data.meta?.modelUsed||'local'} provider:${providerExecution.provider || 'local'}`);
-    }
-  } catch (err) {
-    $('outputArea').innerHTML = `<div style="color:var(--red);font-family:var(--mono);font-size:11px;">✗ ${escHtml(err.message)}</div>`;
-    addLog('err', `Invoke ${agentId} network error: ${err.message}`);
-    showToast('Network error: ' + err.message);
-  } finally {
-    btn.disabled = false;
-    btn.textContent = '▶ INVOKE';
-  }
-}
-
-// ── Utility ───────────────────────────────────────────────────────────────
-function formatJson() {
-  try {
-    const v = JSON.parse($('payloadInput').value);
-    $('payloadInput').value = JSON.stringify(v, null, 2);
-  } catch { showToast('Invalid JSON'); }
-}
-
-function clearInput() { $('payloadInput').value = ''; }
-
-function clearOutput() {
-  $('outputArea').innerHTML = '<div class="output-empty">▸ Connect to backend and invoke an agent<br/><span style="font-size:10px;color:var(--text3);">Response will appear here</span></div>';
-  $('responseMeta').style.display = 'none';
-  lastResponse = null;
-}
-
-function copyResponse() {
-  if (!lastResponse) { showToast('No response to copy'); return; }
-  navigator.clipboard.writeText(JSON.stringify(lastResponse, null, 2)).then(() => showToast('✓ Copied to clipboard'));
-}
-
-function switchTab(name, el) {
-  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  $('panel-' + name).classList.add('active');
-  if (el) el.classList.add('active');
-}
-
-
-// ── Workflow Runs ─────────────────────────────────────────────────────────────
-let runReports = [];
-
-async function loadWorkflowRuns() {
-  if (!connected) { showToast('Connect first'); return; }
-  const panel = $('runsPanel');
-  panel.innerHTML = `<div style="text-align:center;color:var(--text3);font-family:var(--mono);font-size:11px;padding:40px 0;"><span class="spinner"></span> Loading run reports...</div>`;
-  try {
-    const { res, data } = await fetchJson(`${getConfig().backendUrl}/workflow/runs`, { headers: makeHeaders() });
-    if (!res.ok) throw new Error(`HTTP ${res.status}: ${data?.error || 'could not load runs'}`);
-    runReports = data.runs || [];
-    addLog('ok', `Loaded ${runReports.length} workflow run reports`);
-    renderWorkflowRuns();
-  } catch (err) {
-    addLog('err', `Failed to load workflow runs: ${err.message}`);
-    panel.innerHTML = `<div style="text-align:center;color:var(--red);font-family:var(--mono);font-size:11px;padding:40px 0;">✗ ${escHtml(err.message)}</div>`;
-  }
-}
-
-function renderWorkflowRuns() {
-  const panel = $('runsPanel');
-  if (!runReports.length) {
-    panel.innerHTML = `<div style="text-align:center;color:var(--text3);font-family:var(--mono);font-size:11px;padding:40px 0;">No run reports found in reports/workflow-runs/</div>`;
-    return;
-  }
-  panel.innerHTML = runReports.map((r, i) => {
-    const modeClass = r.mode === 'dry-run' ? 'dry-run' : r.mode === 'execute' ? 'execute' : 'unknown';
-    const dateStr = r.date ? new Date(r.date).toLocaleString() : r.filename?.slice(0, 10) || '—';
-    const statsHtml = [
-      r.stepCount != null ? `<span class="run-stat steps">${r.stepCount} steps</span>` : '',
-      r.passed != null ? `<span class="run-stat pass">✓ ${r.passed}</span>` : '',
-      r.failed != null && r.failed > 0 ? `<span class="run-stat fail">✗ ${r.failed}</span>` : '',
-      r.warnings != null && r.warnings > 0 ? `<span class="run-stat warn">⚠ ${r.warnings}</span>` : '',
-    ].filter(Boolean).join('');
-    return `<div class="run-card" id="run-card-${i}">
-      <div class="run-card-header" onclick="expandRunDetail(${i})">
-        <span class="run-mode-pill ${modeClass}">${r.mode || '?'}</span>
-        <span class="run-card-name">${escHtml(r.workflowName || r.filename)}</span>
-        <div class="run-card-stats">${statsHtml}</div>
-        <span class="run-card-date">${escHtml(dateStr)}</span>
-        <span style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-left:4px;">▸</span>
-      </div>
-      <div class="run-card-body" id="run-body-${i}">
-        <div style="font-family:var(--mono);font-size:10px;color:var(--text3);padding:4px 0;">Click to load full report...</div>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-async function expandRunDetail(i) {
-  const body = $(`run-body-${i}`);
-  if (!body) return;
-  const isOpen = body.classList.contains('open');
-
-  // Close all other cards
-  document.querySelectorAll('.run-card-body').forEach(b => b.classList.remove('open'));
-
-  if (isOpen) return; // toggle off
-
-  const r = runReports[i];
-  if (!r?.filename) return;
-  body.classList.add('open');
-  body.innerHTML = `<span class="spinner"></span> Loading ${escHtml(r.filename)}...`;
-
-  try {
-    const { res, data } = await fetchJson(`${getConfig().backendUrl}/workflow/runs/${encodeURIComponent(r.filename)}`, { headers: makeHeaders() });
-    if (!res.ok) throw new Error(`HTTP ${res.status}: ${data?.error || 'could not load'}`);
-    body.innerHTML = `<pre style="font-family:var(--mono);font-size:10px;line-height:1.6;overflow-x:auto;">${highlightJson(data)}</pre>`;
-  } catch (err) {
-    body.innerHTML = `<span style="color:var(--red);font-family:var(--mono);font-size:10px;">✗ ${escHtml(err.message)}</span>`;
-  }
-}
-
-// ── Contract Validator ────────────────────────────────────────────────────────
-
-function setPhase2Item(id, pass, label) {
-  const el = $(id);
-  if (!el) return;
-  el.className = 'phase2-item ' + (pass ? 'pass' : 'fail');
-  el.innerHTML = `<span class="phase2-icon" style="color:${pass ? 'var(--teal)' : 'var(--red)'};">${pass ? '✓' : '✗'}</span><span class="phase2-label">${label}</span><span style="font-size:9px;color:${pass ? 'var(--teal)' : 'var(--red)'};">${pass ? 'present' : 'missing'}</span>`;
-}
-
-async function validateWorkflowJson() {
-  const raw = $('validatorInput').value.trim();
-  if (!raw) { showToast('Paste a workflow JSON first'); return; }
-
-  let parsed;
-  try {
-    parsed = JSON.parse(raw);
-  } catch (e) {
-    $('valStatusBadge').className = 'val-badge invalid';
-    $('valStatusBadge').textContent = '✗ Invalid JSON — ' + e.message;
-    return;
-  }
-
-  const btn = $('validateBtn');
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span>VALIDATING...';
-
-  try {
-    let result;
-
-    if (connected) {
-      // Call backend endpoint
-      const { res, data } = await fetchJson(`${getConfig().backendUrl}/workflow/validate`, {
-        method: 'POST',
-        headers: makeHeaders(),
-        body: JSON.stringify(parsed)
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status}: ${data?.error || 'validation failed'}`);
-      result = data;
-    } else {
-      // Client-side fallback: only check basic structure
-      const errors = [];
-      const warnings = [];
-      const wf = parsed?.workflow;
-      if (!wf) { errors.push('workflow root key is missing'); }
-      else {
-        if (!Array.isArray(wf.agents) || !wf.agents.length) errors.push('[workflow.agents] Array must contain at least 1 element(s)');
-        if (!wf.id) warnings.push('workflow.id is missing — recommended for run report traceability');
-        if (!wf.name) warnings.push('workflow.name is missing — recommended for human-readable reports');
-        if (!wf.goal) warnings.push('workflow.goal is missing — recommended for audit trail');
-        if (!wf.executedBy) warnings.push('[Phase 2] workflow.executedBy is not set');
-        if (!wf.contextPassing) warnings.push('[Phase 2] workflow.contextPassing is not set');
-        if (!Array.isArray(wf.decisionLog) || !wf.decisionLog.length) warnings.push('[Phase 2] workflow.decisionLog is empty');
-      }
-      result = {
-        valid: errors.length === 0,
-        errors,
-        warnings,
-        phase2: {
-          executedBy: typeof wf?.executedBy === 'string' && wf.executedBy.length > 0,
-          contextPassing: wf?.contextPassing !== undefined,
-          decisionLog: Array.isArray(wf?.decisionLog) && wf.decisionLog.length > 0,
-          failureClassification: false,
-          compliant: false
-        }
-      };
-    }
-
-    // ── Render status badge ──
-    const badge = $('valStatusBadge');
-    if (result.valid) {
-      badge.className = 'val-badge valid';
-      badge.textContent = `✓ VALID — ${result.warnings.length} warning(s)`;
-    } else {
-      badge.className = 'val-badge invalid';
-      badge.textContent = `✗ INVALID — ${result.errors.length} error(s), ${result.warnings.length} warning(s)`;
-    }
-
-    // ── Phase 2 checklist ──
-    const p2 = result.phase2 || {};
-    setPhase2Item('p2-executedBy',      p2.executedBy,      'executedBy');
-    setPhase2Item('p2-contextPassing',  p2.contextPassing,  'contextPassing');
-    setPhase2Item('p2-decisionLog',     p2.decisionLog,     'decisionLog');
-    setPhase2Item('p2-failClass',       p2.failureClassification, 'failureClassification');
-    const compliantEl = $('p2-compliant');
-    if (compliantEl) {
-      compliantEl.className = 'phase2-item ' + (p2.compliant ? 'pass' : 'fail');
-      compliantEl.innerHTML = `<span class="phase2-icon" style="color:${p2.compliant ? 'var(--teal)' : 'var(--red)'};">${p2.compliant ? '✓' : '✗'}</span><span class="phase2-label" style="font-weight:600;">Phase 2 Compliant</span><span style="font-size:9px;color:${p2.compliant ? 'var(--teal)' : 'var(--amber)'};">${p2.compliant ? 'COMPLIANT' : 'INCOMPLETE'}</span>`;
-    }
-
-    // ── Errors ──
-    const errSec = $('valErrorsSection');
-    const errList = $('valErrors');
-    if (result.errors.length) {
-      errSec.style.display = '';
-      errList.innerHTML = result.errors.map(e => `<div class="val-msg err">${escHtml(e)}</div>`).join('');
-    } else {
-      errSec.style.display = 'none';
-    }
-
-    // ── Warnings ──
-    const warnSec = $('valWarningsSection');
-    const warnList = $('valWarnings');
-    if (result.warnings.length) {
-      warnSec.style.display = '';
-      warnList.innerHTML = result.warnings.map(w => `<div class="val-msg warn">${escHtml(w)}</div>`).join('');
-    } else {
-      warnSec.style.display = 'none';
-    }
-
-    addLog(result.valid ? 'ok' : 'warn', `Workflow validated: valid=${result.valid} errors=${result.errors.length} warnings=${result.warnings.length} phase2=${p2.compliant ? 'compliant' : 'incomplete'}`);
-
-  } catch (err) {
-    $('valStatusBadge').className = 'val-badge invalid';
-    $('valStatusBadge').textContent = '✗ ' + err.message;
-    addLog('err', `Validation request failed: ${err.message}`);
-  } finally {
-    btn.disabled = false;
-    btn.textContent = '✓ VALIDATE';
-  }
-}
-
-function formatValidatorJson() {
-  try {
-    const v = JSON.parse($('validatorInput').value);
-    $('validatorInput').value = JSON.stringify(v, null, 2);
-  } catch { showToast('Invalid JSON'); }
-}
-
-function loadSampleWorkflow() {
-  const sample = {
-    workflow: {
-      id: 'sample-workflow',
-      name: 'Sample Workflow',
-      goal: 'Demonstrate Phase 2 contract fields',
-      created: new Date().toISOString(),
-      executedBy: 'task-planner',
-      contextPassing: { tenantId: 'dev', runId: 'sample-001' },
-      decisionLog: [
-        { step: 1, agentId: 'validator', decision: 'Schema valid', outcome: 'pass', ts: new Date().toISOString() }
-      ],
-      schedule: { cron: '0 0 * * *', timezone: 'LOCAL' },
-      artifacts: { report_output_dir: 'reports/workflow-runs' },
-      agents: [
-        { step: 1, id: 'task-planner', name: 'Task Planner', role: 'Job decomposer', category: 'core', estimatedDuration: 3 },
-        { step: 2, id: 'validator',    name: 'Schema Validator', role: 'Zod check',  category: 'data',   estimatedDuration: 2 },
-        { step: 3, id: 'report-gen',   name: 'Report Generator', role: 'PDF output', category: 'output', estimatedDuration: 3 },
-        { step: 4, id: 'logger',       name: 'Logger', role: 'Audit trail',          category: 'output', estimatedDuration: 1 }
-      ]
-    }
-  };
-  $('validatorInput').value = JSON.stringify(sample, null, 2);
-  showToast('Sample workflow loaded');
-}
-
-// ── Deeja Chat ───────────────────────────────────────────────────────────────
-
-const deejaInput = $('deejaInput');
-if (deejaInput) {
-  deejaInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      sendDeejaMessage();
-    }
-  });
-}
-
-async function sendDeejaMessage() {
-  if (!connected) { showToast('Connect first'); return; }
-  const inputEl = $('deejaInput');
-  const text = inputEl.value.trim();
-  if (!text) return;
-
-  const historyEl = $('deejaChatHistory');
-  const sendBtn = $('deejaSendBtn');
-  
-  // Add User Bubble
-  const userDiv = document.createElement('div');
-  userDiv.className = 'chat-bubble user';
-  userDiv.textContent = text;
-  historyEl.appendChild(userDiv);
-  
-  inputEl.value = '';
-  inputEl.disabled = true;
-  sendBtn.disabled = true;
-  historyEl.scrollTop = historyEl.scrollHeight;
-
-  // Add Loading Bubble
-  const loadingDiv = document.createElement('div');
-  loadingDiv.className = 'chat-bubble deeja';
-  loadingDiv.innerHTML = '<span class="spinner"></span> Deeja is typing...';
-  historyEl.appendChild(loadingDiv);
-  historyEl.scrollTop = historyEl.scrollHeight;
-
-  try {
-    const { res, data } = await fetchJson(`${getConfig().backendUrl}/agents/deeja/invoke`, {
-      method: 'POST',
-      headers: makeHeaders(),
-      body: JSON.stringify({ goal: text })
-    });
-    
-    loadingDiv.remove();
-
-    if (!res.ok) throw new Error(`HTTP ${res.status}: ${data?.error || 'invoke failed'}`);
-    
-    // Add Deeja Bubble
-    const deejaDiv = document.createElement('div');
-    deejaDiv.className = 'chat-bubble deeja';
-    
-    let bubbleHtml = `<div style="white-space: pre-wrap;">${escHtml(data.message || 'Done.')}</div>`;
-    
-    if (data.actionableCard) {
-      const card = data.actionableCard;
-      const actionsHtml = Array.isArray(card.suggestedActions) 
-        ? `<ul style="margin-top:8px;padding-left:16px;">${card.suggestedActions.map(a => `<li>${escHtml(a)}</li>`).join('')}</ul>`
-        : '';
-        
-      bubbleHtml += `
-        <div class="chat-card">
-          <div class="chat-card-title">${escHtml(card.title || 'Summary')}</div>
-          <div style="font-size:10px;color:var(--text3);margin-bottom:8px;">Status: ${escHtml(card.status || 'N/A')}</div>
-          ${card.summary ? `<div>${escHtml(card.summary)}</div>` : ''}
-          ${actionsHtml}
+  const errClass = (h && !h.ok) ? ' status-error' : '';
+  return `
+    <div class="agent-card${errClass}" ${selectable ? '' : ''}>
+      <div class="agent-header">
+        <div class="agent-avatar ${agent.cls}">${agent.label}</div>
+        <div>
+          <div class="agent-name">${agent.id}</div>
+          <div class="agent-role">${agent.role}</div>
         </div>
-      `;
-    }
-    
-    deejaDiv.innerHTML = bubbleHtml;
-    historyEl.appendChild(deejaDiv);
-    
-  } catch (err) {
-    loadingDiv.remove();
-    const errDiv = document.createElement('div');
-    errDiv.className = 'chat-bubble deeja';
-    errDiv.style.borderColor = 'var(--red)';
-    errDiv.innerHTML = `<span style="color:var(--red);">✗ ${escHtml(err.message)}</span>`;
-    historyEl.appendChild(errDiv);
-  } finally {
-    inputEl.disabled = false;
-    sendBtn.disabled = false;
-    inputEl.focus();
-    historyEl.scrollTop = historyEl.scrollHeight;
+        <div class="agent-status">${statusHtml}</div>
+      </div>
+      <div class="metrics-row">${metricsHtml}</div>
+      ${errorHtml}
+    </div>`;
+}
+
+function renderAgentGrids() {
+  const html = AGENTS.map(a => buildAgentCard(a, true)).join('');
+  const ovGrid = document.getElementById('ov-agents-grid');
+  const agGrid = document.getElementById('ag-agents-grid');
+  if (ovGrid) ovGrid.innerHTML = html;
+  if (agGrid) agGrid.innerHTML = html;
+}
+
+function updateOverviewStats() {
+  const online = AGENTS.filter(a => healthData[a.id] && healthData[a.id].ok).length;
+  document.getElementById('ov-online').textContent = `${online} / ${AGENTS.length}`;
+  document.getElementById('ov-online-sub').textContent = online === AGENTS.length ? 'all agents healthy' : `${AGENTS.length - online} agent(s) unreachable`;
+
+  const latencies = AGENTS
+    .filter(a => healthData[a.id] && healthData[a.id].ok)
+    .map(a => {
+      const d = healthData[a.id].data;
+      return d.latency ?? d.latencyMs ?? d.latency_ms ?? d.avgLatency ?? null;
+    })
+    .filter(v => v !== null && typeof v === 'number');
+
+  if (latencies.length > 0) {
+    const avg = Math.round(latencies.reduce((s, v) => s + v, 0) / latencies.length);
+    document.getElementById('ov-latency').textContent = avg + ' ms';
+  } else {
+    document.getElementById('ov-latency').textContent = '—';
   }
 }
 
-// init log
-loadUiConfig();
-wireConfigPersistence();
-addLog('info', `Zynx MCP Console initialized. Backend URL: ${getConfig().backendUrl}`);
-if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
-  addLog('info', 'Auto-connect enabled because the dashboard is served over HTTP.');
-  connectBackend().then(() => {
-    if (connected) loadWorkflowRuns();
-  });
+function scheduleRefresh() {
+  if (refreshTimer) clearInterval(refreshTimer);
+  if (CONFIG.interval > 0) {
+    refreshTimer = setInterval(fetchAllHealth, CONFIG.interval * 1000);
+  }
 }
+
+function showPage(name, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  el.classList.add('active');
+}
+
+function initConfigUI() {
+  document.getElementById('cfg-base-url').value = CONFIG.baseUrl;
+  document.getElementById('cfg-interval').value = CONFIG.interval;
+  document.getElementById('cfg-auth').value = CONFIG.auth;
+  document.getElementById('backend-url').textContent = CONFIG.baseUrl;
+}
+
+renderAgentGrids();
+initConfigUI();
+scheduleRefresh();
+fetchAllHealth();
 </script>
 </body>
 </html>

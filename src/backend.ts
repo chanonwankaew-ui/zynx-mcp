@@ -109,11 +109,45 @@ function assertRole(meta: AgentMeta, roles: string[]) {
   if (!ok) throw Object.assign(new Error("Insufficient role"), { status: 403 });
 }
 
-// ─── Health Metrics ───────────────────────────────────────────────────────────
+// ─── Health Metrics & Tracking ────────────────────────────────────────────────
 
 const DEV_STUB_HEALTH = process.env.DEV_STUB_HEALTH === "true";
 
-async function getAgentHealthMetrics(_agentId: string) {
+interface AgentMetrics {
+  invokeCount: number;
+  errorCount: number;
+  totalDurationMs: number;
+  lastDurationMs: number;
+  lastInvokeAt: string | null;
+}
+
+const agentMetricsStore = new Map<string, AgentMetrics>();
+
+function getOrInitMetrics(agentId: string): AgentMetrics {
+  let m = agentMetricsStore.get(agentId);
+  if (!m) {
+    m = {
+      invokeCount: 0,
+      errorCount: 0,
+      totalDurationMs: 0,
+      lastDurationMs: 0,
+      lastInvokeAt: null,
+    };
+    agentMetricsStore.set(agentId, m);
+  }
+  return m;
+}
+
+function recordInvoke(agentId: string, durationMs: number, success: boolean) {
+  const m = getOrInitMetrics(agentId);
+  m.invokeCount++;
+  m.lastInvokeAt = new Date().toISOString();
+  m.lastDurationMs = durationMs;
+  m.totalDurationMs += durationMs;
+  if (!success) m.errorCount++;
+}
+
+async function getAgentHealthMetrics(agentId: string) {
   if (DEV_STUB_HEALTH) {
     // Explicit stub mode — only active when DEV_STUB_HEALTH=true.
     return {
@@ -126,14 +160,17 @@ async function getAgentHealthMetrics(_agentId: string) {
   }
 
   const mem = process.memoryUsage();
+  const m = agentMetricsStore.get(agentId);
+  
   return {
     uptime: Math.floor(process.uptime()),
     memoryMb: Math.round(mem.rss / 1024 / 1024),
     heapUsedMb: Math.round(mem.heapUsed / 1024 / 1024),
-    heapTotalMb: Math.round(mem.heapTotal / 1024 / 1024),
-    latencyMs: null,   // populated by a real probe when implemented
-    activeJobs: null,  // populated by a real job queue when implemented
-    errors: 0,
+    latencyMs: m ? m.lastDurationMs : 0,
+    avgLatencyMs: m && m.invokeCount > 0 ? Math.round(m.totalDurationMs / m.invokeCount) : 0,
+    invokeCount: m ? m.invokeCount : 0,
+    errors: m ? m.errorCount : 0,
+    lastInvokeAt: m ? m.lastInvokeAt : null,
   };
 }
 
@@ -249,10 +286,17 @@ app.post("/agents/:agentId/invoke", async (req, res) => {
         modelUsed: result.modelUsed,
       },
     });
+
+    // Record metrics
+    recordInvoke(agentId, durationMs, true);
   } catch (err) {
+    const durationMs = Date.now() - startMs;
     const e = err as any;
     const status = e?.status ?? 500;
     const message = e?.message ?? "Internal server error";
+    
+    // Record failure
+    recordInvoke(agentId, durationMs, false);
     auditLog({ 
       agentId, 
       tenantId: auth.tenantId, 

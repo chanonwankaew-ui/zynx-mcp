@@ -75,6 +75,30 @@ function publicProviderExecution(result: ProviderTextResult) {
   };
 }
 
+/**
+ * Securely read a file from the workspace. 
+ * Prevents reading outside repoRoot.
+ */
+function readWorkspaceFile(filePath: string): string | null {
+  try {
+    if (!filePath) return null;
+    const fullPath = path.resolve(repoRoot, filePath);
+    
+    // Security check: must be inside repoRoot
+    if (!fullPath.startsWith(repoRoot)) {
+      console.warn(`[Security] Blocked attempt to read outside workspace: ${filePath}`);
+      return null;
+    }
+
+    if (fs.existsSync(fullPath) && fs.lstatSync(fullPath).isFile()) {
+      return fs.readFileSync(fullPath, "utf-8");
+    }
+  } catch (e) {
+    console.error(`[Error] Failed to read workspace file ${filePath}:`, e);
+  }
+  return null;
+}
+
 function getGoal(input: Record<string, unknown>): string {
   const context = asRecord(input.context);
   const values = [
@@ -177,14 +201,26 @@ async function taskPlannerHandler(input: Record<string, unknown>, ctx: AgentInvo
     executedBy: "task-planner",
     tenantId: ctx.tenantId
   });
+  const filePath = stringify(input.filePath || input.path || input.file);
+  let fileContext = "";
+  if (filePath) {
+    const content = readWorkspaceFile(filePath);
+    if (content) {
+      fileContext = `FILE CONTENT (${filePath}):\n${content.slice(0, 4000)}`;
+      console.log(`[Agent][${traceId}] task-planner: Read ${filePath} for context (${content.length} bytes)`);
+    }
+  }
+
   const provider = await generateProviderText({
     instructions: [
       "You are the Zynx task-planner agent.",
       "Write a concise operator summary for a workflow plan.",
+      "If file content is provided, analyze it to ensure the plan is technically relevant to the codebase.",
       "Do not invent agent ids or routes. Mention only risks or next actions supported by the supplied plan."
     ].join(" "),
     input: JSON.stringify({
       goal,
+      fileContext,
       agents: agents.map((agent) => ({
         id: agent.id,
         name: agent.name,
@@ -192,12 +228,13 @@ async function taskPlannerHandler(input: Record<string, unknown>, ctx: AgentInvo
         mcpTool: agent.mcpTool
       }))
     }),
-    fallbackText: `Planned ${agents.length} registry-backed Zynx workflow steps.`,
+    fallbackText: `Planned ${agents.length} registry-backed Zynx workflow steps. ${fileContext ? "Contextualized by workspace file." : ""}`,
     maxOutputTokens: 240,
     metadata: {
       agent_id: "task-planner",
       tenant_id: ctx.tenantId,
-      trace_id: traceId
+      trace_id: traceId,
+      has_file_context: !!fileContext
     },
     runtime: { ...ctx.providerConfig, traceId }
   });
@@ -230,15 +267,27 @@ async function deejaHandler(input: Record<string, unknown>, ctx: AgentInvocation
   const fallbackMessage = hasThai
     ? "รับงานแล้วค่ะ นี่คือสรุปสถานะที่ตรวจสอบได้"
     : "Received. Here is the reviewable Zynx response.";
+  const filePath = stringify(input.filePath || input.path || input.file);
+  let fileContext = "";
+  if (filePath) {
+    const content = readWorkspaceFile(filePath);
+    if (content) {
+      fileContext = `WORKSPACE FILE (${filePath}):\n${content.slice(0, 3000)}`;
+      console.log(`[Agent][${traceId}] deeja: Read ${filePath} for user-facing response context.`);
+    }
+  }
+
   const provider = await generateProviderText({
     instructions: [
       "You are Deeja, the Zynx user-facing persona layer.",
       "Write one calm, actionable response for the user.",
+      "If a workspace file is provided, reference its contents to provide a highly relevant answer.",
       "Keep orchestration details separate from user-facing wording.",
       hasThai ? "Respond in Thai." : "Respond in English."
     ].join(" "),
     input: JSON.stringify({
       goal,
+      fileContext,
       backendSummary: summary,
       tenantId: ctx.tenantId,
       userId: ctx.userId
@@ -249,7 +298,8 @@ async function deejaHandler(input: Record<string, unknown>, ctx: AgentInvocation
       agent_id: "deeja",
       tenant_id: ctx.tenantId,
       language: hasThai ? "th" : "en",
-      trace_id: traceId
+      trace_id: traceId,
+      has_file_context: !!fileContext
     },
     runtime: { ...ctx.providerConfig, traceId }
   });
