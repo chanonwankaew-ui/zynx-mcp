@@ -1,40 +1,28 @@
 {
-  "name": "zynx-mcp-wrapper-server",
+  "name": "shortcut-agent-studio",
   "version": "0.1.0",
   "private": true,
-  "type": "module",
   "scripts": {
-    "dev": "tsx src/index.ts",
-    "dev:http": "tsx src/http.ts",
-    "dev:stdio": "tsx src/stdio.ts",
-    "dev:backend": "tsx src/backend.ts",
-    "build": "tsc -p tsconfig.json",
-    "workflow:dev": "npm --prefix apps/workflow-mapper run dev",
-    "workflow:build": "npm --prefix apps/workflow-mapper run build",
-    "workflow:run": "tsx scripts/run-workflow.ts",
-    "blueprint:run": "scripts/build-blueprint-explorer.sh run",
-    "blueprint:verify": "scripts/build-blueprint-explorer.sh --verify",
-    "governance:validate": "tsx scripts/validate-governance.ts",
-    "governance:run": "tsx scripts/run-governance.ts",
-    "start": "node dist/index.js",
-    "start:http": "node dist/http.js",
-    "start:backend": "node dist/backend.js"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
   },
   "dependencies": {
-    "@intercom/messenger-js-sdk": "^0.0.19",
-    "@modelcontextprotocol/sdk": "1.29.0",
-    "cors": "2.8.6",
-    "dotenv": "16.6.1",
-    "express": "4.22.1",
-    "uuid": "^14.0.0",
-    "zod": "3.25.76"
+    "next": "^15.3.3",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "lucide-react": "^0.460.0",
+    "clsx": "^2.1.1",
+    "tailwind-merge": "^2.5.4"
   },
   "devDependencies": {
-    "@types/cors": "2.8.19",
-    "@types/express": "5.0.6",
-    "@types/node": "22.19.15",
-    "@types/uuid": "^10.0.0",
-    "tsx": "4.21.0",
-    "typescript": "5.9.3"
+    "@types/node": "^22.9.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "typescript": "^5.6.3",
+    "tailwindcss": "^4.0.0-beta.3",
+    "@tailwindcss/postcss": "^4.0.0-beta.3",
+    "postcss": "^8.4.49"
   }
 }

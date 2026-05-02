@@ -1,34 +1,11 @@
-# Dependencies
-node_modules/
-**/node_modules/
+# v0 runtime files
+__v0_runtime_loader.js
+__v0_devtools.tsx
+__v0_jsx-dev-runtime.ts
 
-# Environment and secrets
-.env
-.env.*
-!.env.example
-
-# Build output
-dist/
-**/dist/
-build/
-**/build/
-**/.build/
-**/bin/
-**/obj/
-
-# Local tooling
-.codex/
-.vscode/
-CLAUDE.local.md
-
-# Local SDKs and generated bundles
-oracleJdk-26.jdk/
-*.app/
-
-# Logs and OS files
-*.log
+# Common ignores
+node_modules
+.next/
+.env*.local
 .DS_Store
-**/.DS_Store
-
-# Stray compiled / generated binaries at root
-/zynx-mcp
+.vercel
