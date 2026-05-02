@@ -310,19 +310,79 @@ export default function App() {
 
   // Skill Editor State
   const [editingSkillAgentId, setEditingSkillAgentId] = useState(null);
-  const [skillContent, setSkillContent] = useState("");
+  const [activePane, setActivePane] = useState('details'); // 'details' | 'tools-main' | 'add-mcp' | 'add-vertex'
+  const [skillForm, setSkillForm] = useState({
+    name: "",
+    description: "",
+    instructions: "",
+    model: "Gemini 3 Flash (preview)",
+    tools: ["Google Search", "URL Context"]
+  });
+  const [mcpForm, setMcpForm] = useState({ name: "", url: "", auth: "None" });
+  const [vertexForm, setVertexForm] = useState({ projectId: "", location: "global", collectionId: "", dataStoreId: "" });
   const [isSavingSkill, setIsSavingSkill] = useState(false);
+
+  const parseSkillContent = (content) => {
+    let parsed = { name: "", description: "", instructions: content, model: "Gemini 3 Flash (preview)", tools: ["Google Search", "URL Context"] };
+    if (content.startsWith("---")) {
+      const parts = content.split("---");
+      if (parts.length >= 3) {
+        const fm = parts[1];
+        parsed.instructions = parts.slice(2).join("---").trim();
+        fm.split("\\n").forEach(line => {
+          const match = line.match(/^([a-z]+):\\s*(.*)$/i);
+          if (match) {
+            const [, key, val] = match;
+            if (key.toLowerCase() === "tools") {
+              parsed.tools = val.split(",").map(s => s.trim()).filter(Boolean);
+            } else {
+              parsed[key.toLowerCase()] = val.trim();
+            }
+          }
+        });
+      }
+    }
+    return parsed;
+  };
+
+  const serializeSkillContent = () => {
+    return `---
+name: ${skillForm.name}
+description: ${skillForm.description}
+model: ${skillForm.model}
+tools: ${skillForm.tools.join(", ")}
+---
+
+${skillForm.instructions}`;
+  };
 
   const openSkillEditor = async (e, agentId) => {
     e.stopPropagation();
     setEditingSkillAgentId(agentId);
-    setSkillContent("Loading...");
+    setActivePane('details');
+    const ag = agentById(agentId);
+    setSkillForm({
+      name: ag?.name || "",
+      description: ag?.role || "",
+      instructions: "Loading...",
+      model: "Gemini 3 Flash (preview)",
+      tools: ["Google Search", "URL Context"]
+    });
+    setMcpForm({ name: "", url: "", auth: "None" });
+    setVertexForm({ projectId: "", location: "global", collectionId: "", dataStoreId: "" });
     try {
       const res = await fetch(`${ZYNX_BACKEND_URL}/agents/${agentId}/skill`);
       const data = await res.json();
-      setSkillContent(data.skill || "");
+      if (data.skill) {
+        const parsed = parseSkillContent(data.skill);
+        if (!parsed.name) parsed.name = ag?.name || "";
+        if (!parsed.description) parsed.description = ag?.role || "";
+        setSkillForm(parsed);
+      } else {
+        setSkillForm(prev => ({...prev, instructions: ""}));
+      }
     } catch (err) {
-      setSkillContent("Error loading skill.");
+      setSkillForm(prev => ({...prev, instructions: "Error loading skill."}));
     }
   };
 
@@ -333,7 +393,7 @@ export default function App() {
       await fetch(`${ZYNX_BACKEND_URL}/agents/${editingSkillAgentId}/skill`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ skill: skillContent })
+        body: JSON.stringify({ skill: serializeSkillContent() })
       });
       setEditingSkillAgentId(null);
     } catch (err) {
@@ -496,8 +556,9 @@ export default function App() {
         return newMsgs;
       });
 
-      updateLastMessageMetadata({ status: "error", error: error.message });
-    } finally {
+      } catch (err) {
+        updateLastMessageMetadata({ status: "error", error: err.message });
+      } finally {
       setIsProcessing(false);
     }
   };
@@ -794,24 +855,280 @@ export default function App() {
 
       {/* Skill Editor Modal */}
       {editingSkillAgentId && (
-        <div style={{position:"fixed", top:0, left:0, right:0, bottom:0, background:"rgba(0,0,0,0.7)", backdropFilter:"blur(4px)", zIndex:999, display:"flex", alignItems:"center", justifyContent:"center"}}>
-          <div style={{width:800, height:600, background:"var(--bg-panel)", borderRadius:"var(--radius-lg)", border:"1px solid var(--border-color)", display:"flex", flexDirection:"column", overflow:"hidden", boxShadow:"0 20px 40px rgba(0,0,0,0.4)"}}>
+        <div style={{position:"fixed", top:0, left:0, right:0, bottom:0, background:"rgba(0,0,0,0.7)", backdropFilter:"blur(4px)", zIndex:999, display:"flex", alignItems:"center", justifyContent:"flex-end"}}>
+          <div style={{width:480, height:"100%", background:"var(--bg-panel)", borderLeft:"1px solid var(--border-color)", display:"flex", flexDirection:"column", overflow:"hidden", boxShadow:"-10px 0 40px rgba(0,0,0,0.5)", animation:"slideIn 0.2s ease"}}>
             <div style={{padding:"16px 20px", borderBottom:"1px solid var(--border-color)", display:"flex", justifyContent:"space-between", alignItems:"center", background:"var(--bg-main)"}}>
-              <div style={{fontWeight:600, fontSize:15, color:"var(--text-primary)"}}>Edit Skill: {agentById(editingSkillAgentId)?.name} <span style={{color:"var(--text-tertiary)", fontWeight:400, marginLeft:6}}>({editingSkillAgentId}.md)</span></div>
+              <div style={{fontWeight:600, fontSize:15, color:"var(--text-primary)"}}>Details</div>
               <button onClick={()=>setEditingSkillAgentId(null)} style={{background:"transparent", border:"none", color:"var(--text-secondary)", cursor:"pointer"}}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
             </div>
-            <textarea
-              value={skillContent}
-              onChange={e => setSkillContent(e.target.value)}
-              placeholder="Define the agent's persona, aesthetic style, and specific skills in Markdown..."
-              style={{flex:1, padding:20, background:"transparent", border:"none", outline:"none", color:"var(--text-primary)", fontSize:14, fontFamily:"var(--font-mono)", lineHeight:1.6, resize:"none"}}
-            />
+            
+            <div style={{flex:1, overflowY:"auto", padding:"20px", display:"flex", flexDirection:"column", gap:20}}>
+              {/* Name */}
+              <div style={{display:"flex", flexDirection:"column", gap:6}}>
+                <label style={{fontSize:13, fontWeight:500, color:"var(--text-primary)"}}>Name</label>
+                <div style={{position:"relative"}}>
+                  <input 
+                    type="text" 
+                    value={skillForm.name} 
+                    onChange={e => setSkillForm({...skillForm, name: e.target.value})}
+                    style={{width:"100%", padding:"10px 14px", borderRadius:"var(--radius-md)", border:"1px solid var(--border-color)", background:"var(--bg-main)", color:"var(--text-primary)", fontSize:14, outline:"none"}}
+                  />
+                  <div style={{textAlign:"right", fontSize:11, color:"var(--text-tertiary)", marginTop:4}}>{skillForm.name.length} / 128</div>
+                </div>
+              </div>
+
+              {/* Description */}
+              <div style={{display:"flex", flexDirection:"column", gap:6}}>
+                <label style={{fontSize:13, fontWeight:500, color:"var(--text-primary)", display:"flex", alignItems:"center", gap:6}}>
+                  Description 
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                </label>
+                <div style={{position:"relative"}}>
+                  <textarea 
+                    value={skillForm.description} 
+                    onChange={e => setSkillForm({...skillForm, description: e.target.value})}
+                    rows={3}
+                    style={{width:"100%", padding:"10px 14px", borderRadius:"var(--radius-md)", border:"1px solid var(--border-color)", background:"var(--bg-main)", color:"var(--text-primary)", fontSize:14, resize:"vertical", outline:"none"}}
+                  />
+                  <div style={{textAlign:"right", fontSize:11, color:"var(--text-tertiary)", marginTop:4}}>{skillForm.description.length} / 500000</div>
+                </div>
+              </div>
+
+              {/* Instructions */}
+              <div style={{display:"flex", flexDirection:"column", gap:6}}>
+                <label style={{fontSize:13, fontWeight:500, color:"var(--text-primary)", display:"flex", alignItems:"center", gap:6}}>
+                  Instructions 
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                </label>
+                <div style={{position:"relative"}}>
+                  <textarea 
+                    value={skillForm.instructions} 
+                    onChange={e => setSkillForm({...skillForm, instructions: e.target.value})}
+                    rows={10}
+                    placeholder="# Zynx Orchestrator\n\nDefine the agent's behavior here..."
+                    style={{width:"100%", padding:"10px 14px", borderRadius:"var(--radius-md)", border:"1px solid var(--border-color)", background:"var(--bg-main)", color:"var(--text-primary)", fontSize:13, fontFamily:"var(--font-mono)", resize:"vertical", outline:"none", lineHeight:1.5}}
+                  />
+                  <div style={{textAlign:"right", fontSize:11, color:"var(--text-tertiary)", marginTop:4}}>{skillForm.instructions.length} / 500000</div>
+                </div>
+              </div>
+
+              {/* Model */}
+              <div style={{display:"flex", flexDirection:"column", gap:6}}>
+                <label style={{fontSize:13, fontWeight:500, color:"var(--text-primary)", display:"flex", alignItems:"center", gap:6}}>
+                  Model 
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                </label>
+                <select 
+                  value={skillForm.model} 
+                  onChange={e => setSkillForm({...skillForm, model: e.target.value})}
+                  style={{width:"100%", padding:"10px 14px", borderRadius:"var(--radius-md)", border:"1px solid var(--border-color)", background:"var(--bg-main)", color:"var(--text-primary)", fontSize:14, outline:"none", appearance:"none"}}
+                >
+                  <option value="Gemini 3 Flash (preview)">Gemini 3 Flash (preview)</option>
+                  <option value="Gemini 3.5 Pro">Gemini 3.5 Pro</option>
+                  <option value="Claude 3 Haiku">Claude 3 Haiku</option>
+                  <option value="GPT-4o-mini">GPT-4o-mini</option>
+                </select>
+              </div>
+
+              {/* Tools */}
+              <div style={{display:"flex", flexDirection:"column", gap:6, marginBottom:20}}>
+                <div style={{display:"flex", justifyContent:"space-between", alignItems:"center"}}>
+                  <label style={{fontSize:14, fontWeight:600, color:"var(--text-primary)"}}>Tools</label>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" strokeWidth="2"><polyline points="18 15 12 9 6 15"/></svg>
+                </div>
+                <div style={{fontSize:12, color:"var(--text-secondary)", marginBottom:4}}>Enable agent to complete tasks</div>
+                
+                <div style={{padding:"12px", border:"1px solid var(--border-color)", borderRadius:"var(--radius-md)", background:"var(--bg-main)", display:"flex", flexWrap:"wrap", gap:8, minHeight:"80px", position:"relative"}}>
+                  {skillForm.tools.map((t, i) => (
+                    <div key={i} style={{display:"flex", alignItems:"center", gap:6, padding:"4px 10px", background:"var(--bg-panel)", border:"1px solid var(--border-color)", borderRadius:"100px", fontSize:12, color:"var(--text-primary)"}}>
+                      {t === "Google Search" ? <span style={{color:"#4285F4", fontWeight:"bold"}}>G</span> : <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" strokeWidth="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>}
+                      {t}
+                      <button onClick={() => setSkillForm({...skillForm, tools: skillForm.tools.filter((_, idx)=>idx!==i)})} style={{background:"transparent", border:"none", color:"var(--text-secondary)", cursor:"pointer", display:"flex", alignItems:"center", marginLeft:2}}><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+                    </div>
+                  ))}
+                  <button onClick={() => {
+                    setActivePane('tools-main');
+                  }} style={{position:"absolute", bottom:8, right:8, background:"transparent", border:"none", color:"var(--text-secondary)", cursor:"pointer"}}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+                </div>
+              </div>
+
+            </div>
+
             <div style={{padding:"16px 20px", borderTop:"1px solid var(--border-color)", display:"flex", justifyContent:"flex-end", background:"var(--bg-main)", gap:12}}>
               <button onClick={()=>setEditingSkillAgentId(null)} style={{padding:"8px 16px", borderRadius:"var(--radius-sm)", border:"1px solid var(--border-color)", background:"transparent", color:"var(--text-primary)", cursor:"pointer", fontSize:13}}>Cancel</button>
-              <button onClick={saveSkill} disabled={isSavingSkill} style={{padding:"8px 24px", borderRadius:"var(--radius-sm)", border:"none", background:"var(--accent)", color:"#fff", fontWeight:600, fontSize:13, cursor:isSavingSkill?"not-allowed":"pointer"}}>
-                {isSavingSkill ? "Saving..." : "Save Skill"}
+              <button onClick={saveSkill} disabled={isSavingSkill} style={{padding:"8px 24px", borderRadius:"var(--radius-sm)", border:"none", background:"var(--text-primary)", color:"var(--bg-main)", fontWeight:600, fontSize:13, cursor:isSavingSkill?"not-allowed":"pointer"}}>
+                {isSavingSkill ? "Saving..." : "Save"}
               </button>
             </div>
+            
+            {/* --- SUB-PANES --- */}
+            {activePane !== 'details' && (
+              <div style={{position:"absolute", top:0, left:0, width:"100%", height:"100%", background:"var(--bg-panel)", display:"flex", flexDirection:"column", zIndex:10, animation:"slideIn 0.2s ease"}}>
+                
+                {/* Tools Main Pane */}
+                {activePane === 'tools-main' && (
+                  <>
+                    <div style={{padding:"16px 20px", borderBottom:"1px solid var(--border-color)", display:"flex", alignItems:"center", background:"var(--bg-main)", gap:16}}>
+                      <button onClick={()=>setActivePane('details')} style={{background:"transparent", border:"none", color:"var(--text-primary)", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center"}}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
+                      <div style={{fontWeight:500, fontSize:15, color:"var(--text-primary)", flex:1}}>Tools</div>
+                      <button onClick={()=>setEditingSkillAgentId(null)} style={{background:"transparent", border:"none", color:"var(--text-secondary)", cursor:"pointer"}}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+                    </div>
+                    <div style={{flex:1, overflowY:"auto", padding:"20px"}}>
+                      <div style={{fontSize:14, fontWeight:600, color:"var(--text-primary)", marginBottom:12}}>Tools</div>
+                      
+                      <div style={{display:"flex", flexDirection:"column", gap:8}}>
+                        {/* Google Search Toggle */}
+                        <div style={{display:"flex", alignItems:"center", justifyContent:"space-between", background:"var(--bg-main)", border:"1px solid var(--border-color)", borderRadius:"var(--radius-lg)", padding:"12px 16px"}}>
+                          <div style={{display:"flex", alignItems:"center", gap:12}}>
+                            <div style={{width:32, height:32, borderRadius:"50%", background:"var(--bg-panel)", display:"flex", alignItems:"center", justifyContent:"center", color:"#4285F4", fontWeight:"bold"}}>G</div>
+                            <div>
+                              <div style={{fontSize:13, fontWeight:500, color:"var(--text-primary)"}}>Google Search</div>
+                              <div style={{fontSize:11, color:"var(--text-secondary)"}}>Search the web with Google Search</div>
+                            </div>
+                          </div>
+                          <div onClick={() => {
+                            const has = skillForm.tools.includes("Google Search");
+                            setSkillForm({...skillForm, tools: has ? skillForm.tools.filter(t=>t!=="Google Search") : [...skillForm.tools, "Google Search"]});
+                          }} style={{width:36, height:20, borderRadius:20, background:skillForm.tools.includes("Google Search")?"var(--accent)":"var(--border-color)", position:"relative", cursor:"pointer", transition:"0.2s"}}>
+                            <div style={{width:16, height:16, borderRadius:"50%", background:"#fff", position:"absolute", top:2, left:skillForm.tools.includes("Google Search")?18:2, transition:"0.2s"}} />
+                          </div>
+                        </div>
+
+                        {/* URL Context Toggle */}
+                        <div style={{display:"flex", alignItems:"center", justifyContent:"space-between", background:"var(--bg-main)", border:"1px solid var(--border-color)", borderRadius:"var(--radius-lg)", padding:"12px 16px"}}>
+                          <div style={{display:"flex", alignItems:"center", gap:12}}>
+                            <div style={{width:32, height:32, borderRadius:"50%", background:"var(--bg-panel)", display:"flex", alignItems:"center", justifyContent:"center", color:"var(--text-primary)"}}>
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                            </div>
+                            <div>
+                              <div style={{fontSize:13, fontWeight:500, color:"var(--text-primary)"}}>URL Context</div>
+                              <div style={{fontSize:11, color:"var(--text-secondary)"}}>Browse the content from webpages</div>
+                            </div>
+                          </div>
+                          <div onClick={() => {
+                            const has = skillForm.tools.includes("URL Context");
+                            setSkillForm({...skillForm, tools: has ? skillForm.tools.filter(t=>t!=="URL Context") : [...skillForm.tools, "URL Context"]});
+                          }} style={{width:36, height:20, borderRadius:20, background:skillForm.tools.includes("URL Context")?"var(--accent)":"var(--border-color)", position:"relative", cursor:"pointer", transition:"0.2s"}}>
+                            <div style={{width:16, height:16, borderRadius:"50%", background:"#fff", position:"absolute", top:2, left:skillForm.tools.includes("URL Context")?18:2, transition:"0.2s"}} />
+                          </div>
+                        </div>
+                      </div>
+
+                      <div style={{fontSize:14, fontWeight:600, color:"var(--text-primary)", marginTop:32, marginBottom:12}}>MCP</div>
+                      <div style={{display:"flex", flexDirection:"column", gap:8}}>
+                        <div onClick={()=>setActivePane('add-vertex')} style={{display:"flex", alignItems:"center", justifyContent:"space-between", background:"var(--bg-main)", border:"1px solid var(--border-color)", borderRadius:"var(--radius-lg)", padding:"14px 16px", cursor:"pointer"}}>
+                          <div style={{display:"flex", alignItems:"center", gap:12}}>
+                            <div style={{color:"#4285F4"}}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="7.5 4.21 12 6.81 16.5 4.21"/><polyline points="7.5 19.79 7.5 14.6 3 12"/><polyline points="21 12 16.5 14.6 16.5 19.79"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg></div>
+                            <div style={{fontSize:13, fontWeight:500, color:"var(--text-primary)"}}>Vertex AI Search Data Store</div>
+                          </div>
+                          <div style={{width:24, height:24, borderRadius:"50%", background:"var(--bg-panel)", display:"flex", alignItems:"center", justifyContent:"center", color:"var(--text-secondary)"}}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+                        </div>
+
+                        <div onClick={()=>setActivePane('add-mcp')} style={{display:"flex", alignItems:"center", justifyContent:"space-between", background:"var(--bg-main)", border:"1px solid var(--border-color)", borderRadius:"var(--radius-lg)", padding:"14px 16px", cursor:"pointer"}}>
+                          <div style={{display:"flex", alignItems:"center", gap:12}}>
+                            <div style={{color:"var(--text-secondary)"}}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg></div>
+                            <div style={{fontSize:13, fontWeight:500, color:"var(--text-primary)"}}>MCP Server</div>
+                          </div>
+                          <div style={{width:24, height:24, borderRadius:"50%", background:"var(--bg-panel)", display:"flex", alignItems:"center", justifyContent:"center", color:"var(--text-secondary)"}}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {/* Add MCP Server Pane */}
+                {activePane === 'add-mcp' && (
+                  <>
+                    <div style={{padding:"16px 20px", borderBottom:"1px solid var(--border-color)", display:"flex", alignItems:"center", background:"var(--bg-main)", gap:16}}>
+                      <button onClick={()=>setActivePane('tools-main')} style={{background:"transparent", border:"none", color:"var(--text-primary)", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center"}}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
+                      <div style={{fontWeight:500, fontSize:15, color:"var(--text-primary)", flex:1}}>Tools</div>
+                      <button onClick={()=>setEditingSkillAgentId(null)} style={{background:"transparent", border:"none", color:"var(--text-secondary)", cursor:"pointer"}}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+                    </div>
+                    <div style={{flex:1, overflowY:"auto", padding:"20px", display:"flex", flexDirection:"column", gap:20}}>
+                      <div style={{display:"flex", flexDirection:"column", gap:6}}>
+                        <label style={{fontSize:13, fontWeight:500, color:"var(--text-primary)"}}>MCP display name</label>
+                        <input type="text" placeholder="Name" value={mcpForm.name} onChange={e=>setMcpForm({...mcpForm, name: e.target.value})} style={{width:"100%", padding:"12px 14px", borderRadius:"var(--radius-md)", border:"1px solid var(--border-color)", background:"var(--bg-main)", color:"var(--text-primary)", fontSize:14, outline:"none"}} />
+                      </div>
+                      <div style={{display:"flex", flexDirection:"column", gap:6}}>
+                        <label style={{fontSize:13, fontWeight:500, color:"var(--text-primary)"}}>Endpoint URL</label>
+                        <input type="text" placeholder="URL" value={mcpForm.url} onChange={e=>setMcpForm({...mcpForm, url: e.target.value})} style={{width:"100%", padding:"12px 14px", borderRadius:"var(--radius-md)", border:"1px solid var(--border-color)", background:"var(--bg-main)", color:"var(--text-primary)", fontSize:14, outline:"none"}} />
+                      </div>
+                      <div style={{display:"flex", flexDirection:"column", gap:6}}>
+                        <label style={{fontSize:13, fontWeight:500, color:"var(--text-primary)"}}>Authentication</label>
+                        <select value={mcpForm.auth} onChange={e=>setMcpForm({...mcpForm, auth: e.target.value})} style={{width:"100%", padding:"12px 14px", borderRadius:"var(--radius-md)", border:"1px solid var(--border-color)", background:"var(--bg-main)", color:"var(--text-primary)", fontSize:14, outline:"none", appearance:"none"}}>
+                          <option value="None">None</option>
+                          <option value="Bearer Token">Bearer Token</option>
+                          <option value="Basic Auth">Basic Auth</option>
+                        </select>
+                      </div>
+                      <div style={{display:"flex", gap:16, marginTop:8}}>
+                        <button onClick={()=>{
+                          if(mcpForm.name) setSkillForm({...skillForm, tools: [...skillForm.tools, `MCP: ${mcpForm.name}`]});
+                          setActivePane('tools-main');
+                        }} style={{padding:"8px 24px", borderRadius:"24px", border:"none", background:"#a8c7fa", color:"#0842a0", fontWeight:500, fontSize:13, cursor:"pointer"}}>Add</button>
+                        <button onClick={()=>setActivePane('tools-main')} style={{padding:"8px 16px", background:"transparent", border:"none", color:"#a8c7fa", fontWeight:500, fontSize:13, cursor:"pointer"}}>Cancel</button>
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {/* Add Vertex AI Pane */}
+                {activePane === 'add-vertex' && (
+                  <>
+                    <div style={{padding:"16px 20px", borderBottom:"1px solid var(--border-color)", display:"flex", alignItems:"center", background:"var(--bg-main)", gap:16}}>
+                      <button onClick={()=>setActivePane('tools-main')} style={{background:"transparent", border:"none", color:"var(--text-primary)", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center"}}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
+                      <div style={{fontWeight:500, fontSize:15, color:"var(--text-primary)", flex:1}}>Tools</div>
+                      <button onClick={()=>setEditingSkillAgentId(null)} style={{background:"transparent", border:"none", color:"var(--text-secondary)", cursor:"pointer"}}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+                    </div>
+                    <div style={{flex:1, overflowY:"auto", padding:"20px", display:"flex", flexDirection:"column", gap:16}}>
+                      <div style={{display:"flex", flexDirection:"column", gap:6}}>
+                        <label style={{fontSize:13, fontWeight:500, color:"var(--text-primary)"}}>GCP Project ID</label>
+                        <input type="text" placeholder="e.g. google.com:projectId" value={vertexForm.projectId} onChange={e=>setVertexForm({...vertexForm, projectId: e.target.value})} style={{width:"100%", padding:"12px 14px", borderRadius:"var(--radius-md)", border:"1px solid var(--border-color)", background:"var(--bg-main)", color:"var(--text-primary)", fontSize:14, outline:"none"}} />
+                        <div style={{fontSize:11, color:"var(--text-tertiary)"}}>You can find the ID in the <a href="#" style={{color:"#a8c7fa"}}>GCP dashboard</a></div>
+                      </div>
+                      <div style={{display:"flex", flexDirection:"column", gap:6}}>
+                        <label style={{fontSize:13, fontWeight:500, color:"var(--text-primary)"}}>Location</label>
+                        <select value={vertexForm.location} onChange={e=>setVertexForm({...vertexForm, location: e.target.value})} style={{width:"100%", padding:"12px 14px", borderRadius:"var(--radius-md)", border:"1px solid var(--border-color)", background:"var(--bg-main)", color:"var(--text-primary)", fontSize:14, outline:"none", appearance:"none"}}>
+                          <option value="global">global</option>
+                          <option value="us-central1">us-central1</option>
+                        </select>
+                        <div style={{fontSize:11, color:"var(--text-tertiary)"}}>You can find this information inside datastore details page</div>
+                      </div>
+                      <div style={{display:"flex", flexDirection:"column", gap:6}}>
+                        <label style={{fontSize:13, fontWeight:500, color:"var(--text-primary)"}}>Collection ID</label>
+                        <input type="text" placeholder="e.g., collectionId" value={vertexForm.collectionId} onChange={e=>setVertexForm({...vertexForm, collectionId: e.target.value})} style={{width:"100%", padding:"12px 14px", borderRadius:"var(--radius-md)", border:"1px solid var(--border-color)", background:"var(--bg-main)", color:"var(--text-primary)", fontSize:14, outline:"none"}} />
+                        <div style={{fontSize:11, color:"var(--text-tertiary)"}}>You can find this information inside datastore details page</div>
+                      </div>
+                      <div style={{display:"flex", flexDirection:"column", gap:6}}>
+                        <label style={{fontSize:13, fontWeight:500, color:"var(--text-primary)"}}>Data Store ID</label>
+                        <input type="text" placeholder="e.g., dataStoreId" value={vertexForm.dataStoreId} onChange={e=>setVertexForm({...vertexForm, dataStoreId: e.target.value})} style={{width:"100%", padding:"12px 14px", borderRadius:"var(--radius-md)", border:"1px solid var(--border-color)", background:"var(--bg-main)", color:"var(--text-primary)", fontSize:14, outline:"none"}} />
+                        <div style={{fontSize:11, color:"var(--text-tertiary)"}}>You can find the IDs of the datastore in the <a href="#" style={{color:"#a8c7fa"}}>datastore overview page</a></div>
+                      </div>
+                      
+                      <div style={{display:"flex", gap:12, padding:"12px 16px", background:"var(--bg-main)", border:"1px solid var(--border-color)", borderRadius:"var(--radius-md)", marginTop:8}}>
+                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-primary)" strokeWidth="2" style={{flexShrink:0, marginTop:2}}><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                         <div style={{fontSize:12, color:"var(--text-primary)", lineHeight:1.5}}>Grant permissions to connect to a Vertex AI Search datastore using the instructions <a href="#" style={{color:"#a8c7fa"}}>here.</a></div>
+                      </div>
+
+                      <div style={{display:"flex", gap:16, marginTop:8}}>
+                        <button onClick={()=>{
+                          if(vertexForm.dataStoreId) setSkillForm({...skillForm, tools: [...skillForm.tools, `Vertex AI: ${vertexForm.dataStoreId}`]});
+                          setActivePane('tools-main');
+                        }} style={{padding:"8px 24px", borderRadius:"24px", border:"none", background:"#a8c7fa", color:"#0842a0", fontWeight:500, fontSize:13, cursor:"pointer"}}>Add</button>
+                        <button onClick={()=>setActivePane('tools-main')} style={{padding:"8px 16px", background:"transparent", border:"none", color:"#a8c7fa", fontWeight:500, fontSize:13, cursor:"pointer"}}>Cancel</button>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+            
+            <style>{`
+              @keyframes slideIn {
+                from { transform: translateX(100%); }
+                to { transform: translateX(0); }
+              }
+            `}</style>
           </div>
         </div>
       )}
