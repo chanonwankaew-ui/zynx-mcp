@@ -447,8 +447,193 @@ async function reviewerHandler(input: Record<string, unknown>): Promise<Record<s
   };
 }
 
-async function fallbackHandler(agentId: string, input: Record<string, unknown>): Promise<Record<string, unknown>> {
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+
+// ─── Orchestrator Handler ─────────────────────────────────────────────────
+
+async function orchestratorHandler(input: Record<string, unknown>, ctx: AgentInvocationContext): Promise<Record<string, unknown>> {
+  const goal = getGoal(input);
+  const preferredAgents = asArray(input.preferredAgents ?? input.preferred_agents ?? input.agents)
+    .map(v => stringify(v))
+    .filter(Boolean);
+
+  const provider = await generateProviderText({
+    instructions: [
+      "You are the Zynx Orchestrator agent — master coordinator.",
+      "Given the goal and optional preferred agents, produce a brief coordination plan:",
+      "which agents to activate, in what order, and why.",
+      "Keep the response short (2-4 sentences). Do not invent agent IDs not in the registry."
+    ].join(" "),
+    input: JSON.stringify({ goal, preferredAgents, tenantId: ctx.tenantId }),
+    fallbackText: `Orchestrating workflow for goal: ${goal.slice(0, 120)}. Routing to task-planner for decomposition.`,
+    maxOutputTokens: 180,
+    metadata: { agent_id: "orchestrator", tenant_id: ctx.tenantId },
+    runtime: ctx.providerConfig
+  });
+
+  return {
+    message: provider.text,
+    coordinationPlan: {
+      goal,
+      preferredAgents: preferredAgents.length ? preferredAgents : ["task-planner"],
+      nextAgent: preferredAgents[0] ?? "task-planner",
+      tenantId: ctx.tenantId
+    },
+    nextActions: [
+      "Route to task-planner to decompose the goal into workflow steps.",
+      "Pass coordinationPlan.goal forward as workflow context."
+    ],
+    providerExecution: publicProviderExecution(provider)
+  };
+}
+
+// ─── Data Ingest Handler ───────────────────────────────────────────────────
+
+async function dataIngestHandler(input: Record<string, unknown>, ctx: AgentInvocationContext): Promise<Record<string, unknown>> {
+  const goal = getGoal(input);
+  const rawData = input.data ?? input.payload ?? input.source ?? input;
+  const dataSummary = summarize(rawData, 400);
+
+  const provider = await generateProviderText({
+    instructions: [
+      "You are the Zynx Data Ingestion agent — ETL pipeline.",
+      "Summarize the provided input data: identify key fields, data types, and any obvious quality issues.",
+      "Keep your response to 3-5 bullet points. Do not fabricate data not in the input."
+    ].join(" "),
+    input: JSON.stringify({ goal, dataSummary, tenantId: ctx.tenantId }),
+    fallbackText: `Data ingestion: received payload for goal '${goal.slice(0, 80)}'. Fields extracted and staged for downstream agents.`,
+    maxOutputTokens: 220,
+    metadata: { agent_id: "data-ingest", tenant_id: ctx.tenantId },
+    runtime: ctx.providerConfig
+  });
+
+  return {
+    message: provider.text,
+    ingestResult: {
+      goal,
+      recordsIngested: Array.isArray(rawData) ? rawData.length : 1,
+      dataShape: typeof rawData === "object" && rawData !== null
+        ? Object.keys(rawData as Record<string, unknown>).slice(0, 10)
+        : ["scalar"],
+      staged: true
+    },
+    nextActions: [
+      "Pass ingestResult to validator for schema checks.",
+      "Then route to transformer for normalization."
+    ],
+    providerExecution: publicProviderExecution(provider)
+  };
+}
+
+// ─── Report Generator Handler ───────────────────────────────────────────────
+
+async function reportGenHandler(input: Record<string, unknown>, ctx: AgentInvocationContext): Promise<Record<string, unknown>> {
+  const goal = getGoal(input);
+  const runData = input.runData ?? input.report ?? input.summary ?? input.result ?? input;
+  const runSummary = summarize(runData, 600);
+  const ts = new Date().toISOString();
+
+  const provider = await generateProviderText({
+    instructions: [
+      "You are the Zynx Report Generator agent.",
+      "Write a concise, structured operator report for the completed workflow run.",
+      "Include: a one-line status summary, key outcomes (pass/fail counts if available),",
+      "and one recommended next action. Keep it under 150 words."
+    ].join(" "),
+    input: JSON.stringify({ goal, runSummary, tenantId: ctx.tenantId, ts }),
+    fallbackText: `Workflow run report generated at ${ts}. Goal: ${goal.slice(0, 80)}. See run data for details.`,
+    maxOutputTokens: 280,
+    metadata: { agent_id: "report-gen", tenant_id: ctx.tenantId },
+    runtime: ctx.providerConfig
+  });
+
+  return {
+    message: provider.text,
+    report: {
+      generatedAt: ts,
+      goal,
+      tenantId: ctx.tenantId,
+      format: "markdown-operator",
+      content: provider.text
+    },
+    nextActions: [
+      "Route report to notifier for human review notification.",
+      "Archive to reports/workflow-runs/ via logger."
+    ],
+    providerExecution: publicProviderExecution(provider)
+  };
+}
+
+// ─── Notifier Handler ─────────────────────────────────────────────────────────
+
+async function notifierHandler(input: Record<string, unknown>, ctx: AgentInvocationContext): Promise<Record<string, unknown>> {
+  const goal = getGoal(input);
+  const channel = stringify(input.channel) || "default";
+  const recipientHint = stringify(input.recipient ?? input.userId ?? ctx.userId) || "operator";
+  const context = asRecord(input.context);
+  const reportContent = stringify(input.reportContent ?? context.content ?? input.message);
+
+  const provider = await generateProviderText({
+    instructions: [
+      "You are the Zynx Notifier agent — Slack / email / LINE output.",
+      "Write a short, clear notification message (2-3 sentences max) for a human reviewer.",
+      "Tone: professional, factual, actionable. Do not include raw JSON or stack traces."
+    ].join(" "),
+    input: JSON.stringify({ goal, channel, recipient: recipientHint, reportContent: reportContent.slice(0, 300) }),
+    fallbackText: `Zynx notification: Workflow '${goal.slice(0, 60)}' completed. Please review the run report. Tenant: ${ctx.tenantId}.`,
+    maxOutputTokens: 160,
+    metadata: { agent_id: "notifier", tenant_id: ctx.tenantId, channel },
+    runtime: ctx.providerConfig
+  });
+
+  return {
+    message: provider.text,
+    notification: {
+      channel,
+      recipient: recipientHint,
+      sentAt: new Date().toISOString(),
+      content: provider.text,
+      delivered: false  // actual delivery requires channel adapter (Phase 3 runtime service)
+    },
+    nextActions: [
+      "Add channel adapter (Slack/email/LINE) in Phase 3 runtime services to set delivered=true."
+    ],
+    providerExecution: publicProviderExecution(provider)
+  };
+}
+
+
+async function fallbackHandler(agentId: string, input: Record<string, unknown>, ctx: AgentInvocationContext): Promise<Record<string, unknown>> {
   const meta = registryAgent(agentId);
+  const skillPath = path.join(repoRoot, "docs", "skills", `${agentId}.md`);
+  
+  if (fs.existsSync(skillPath)) {
+    const skillContent = fs.readFileSync(skillPath, "utf-8");
+    const systemPrompt = `You are the ${meta.name} agent. Role: ${meta.role}.\n\nSKILL DEFINITION:\n${skillContent}`;
+    
+    const userPrompt = `GOAL:\n${stringify(input.goal, "No goal provided.")}\n\nCONTEXT:\n${JSON.stringify(input.context || {}, null, 2)}`;
+    
+    const result = await generateProviderText({
+      instructions: systemPrompt,
+      input: userPrompt,
+      fallbackText: "Fallback output because LLM provider is disabled.",
+      runtime: ctx.providerConfig
+    });
+    
+    return {
+      message: result.text,
+      handlerType: "skill-driven-llm",
+      providerExecution: {
+        modelUsed: result.modelUsed,
+        tokensUsed: result.tokensUsed
+      }
+    };
+  }
+
   return {
     message: `Executed ${meta.name} through local fallback handler.`,
     handlerType: "fallback",
@@ -460,7 +645,7 @@ async function fallbackHandler(agentId: string, input: Record<string, unknown>):
     },
     receivedInput: summarize(input),
     nextActions: [
-      `Add a specialized handler for ${meta.id} when this agent needs production behavior.`
+      `Add a SKILL.md file or specialized handler for ${meta.id} when this agent needs production behavior.`
     ]
   };
 }
@@ -486,8 +671,20 @@ export async function invokeAgentHandler(
     case "reviewer":
       output = await reviewerHandler(input);
       break;
+    case "orchestrator":
+      output = await orchestratorHandler(input, ctx);
+      break;
+    case "data-ingest":
+      output = await dataIngestHandler(input, ctx);
+      break;
+    case "report-gen":
+      output = await reportGenHandler(input, ctx);
+      break;
+    case "notifier":
+      output = await notifierHandler(input, ctx);
+      break;
     default:
-      output = await fallbackHandler(agentId, input);
+      output = await fallbackHandler(agentId, input, ctx);
       break;
   }
 
@@ -495,7 +692,7 @@ export async function invokeAgentHandler(
     output: {
       ...output,
       agentId,
-      handledBy: agentId === "task-planner" || agentId === "deeja" || agentId === "validator" || agentId === "reviewer"
+      handledBy: ["task-planner", "deeja", "validator", "reviewer", "orchestrator", "data-ingest", "report-gen", "notifier"].includes(agentId)
         ? "specialized-handler"
         : "fallback-handler"
     },

@@ -13,6 +13,10 @@ function numberFromEnv(name: string, fallback: number) {
 export const mcpHttpPort = numberFromEnv("MCP_PORT", numberFromEnv("PORT", 3000));
 export const agentBackendPort = numberFromEnv("ZYNX_BACKEND_PORT", numberFromEnv("PORT", 8787));
 export const mcpPath = process.env.MCP_PATH || "/mcp";
+export const mcpHost = process.env.MCP_HOST || "localhost";
+export const mcpAllowedHosts = process.env.MCP_ALLOWED_HOSTS
+  ? process.env.MCP_ALLOWED_HOSTS.split(",").map((host) => host.trim()).filter(Boolean)
+  : undefined;
 
 function booleanFromEnv(name: string, fallback = false) {
   const value = process.env[name];

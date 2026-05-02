@@ -645,6 +645,254 @@
   /* key-value section in response meta */
   .meta-kv { display: flex; gap: 4px; align-items: center; }
   .meta-kv span:first-child { color: var(--text3); }
+
+  /* ── Workflow Runs Panel ── */
+  .runs-panel {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+  }
+
+  .run-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    margin-bottom: 8px;
+    overflow: hidden;
+    transition: border-color 0.15s;
+  }
+  .run-card:hover { border-color: var(--border2); }
+
+  .run-card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .run-card-header:hover { background: var(--bg3); }
+
+  .run-mode-pill {
+    font-family: var(--mono);
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    padding: 2px 8px;
+    border-radius: 3px;
+    flex-shrink: 0;
+    text-transform: uppercase;
+  }
+  .run-mode-pill.dry-run { background: rgba(58,138,221,0.15); color: var(--blue); border: 1px solid rgba(58,138,221,0.3); }
+  .run-mode-pill.execute { background: rgba(29,185,117,0.15); color: var(--teal); border: 1px solid rgba(29,185,117,0.3); }
+  .run-mode-pill.unknown { background: rgba(106,117,133,0.1); color: var(--text2); border: 1px solid var(--border); }
+
+  .run-card-name {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text);
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .run-card-date {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+    flex-shrink: 0;
+  }
+
+  .run-card-stats {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .run-stat {
+    font-family: var(--mono);
+    font-size: 9px;
+    padding: 1px 6px;
+    border-radius: 2px;
+  }
+  .run-stat.pass { background: rgba(29,185,117,0.12); color: var(--teal); }
+  .run-stat.fail { background: rgba(226,75,75,0.12); color: var(--red); }
+  .run-stat.warn { background: rgba(230,160,32,0.12); color: var(--amber); }
+  .run-stat.steps { background: rgba(127,108,255,0.12); color: var(--purple); }
+
+  .run-card-body {
+    display: none;
+    border-top: 1px solid var(--border);
+    padding: 14px;
+    background: var(--bg);
+  }
+  .run-card-body.open { display: block; }
+
+  /* ── Contract Validator Panel ── */
+  .validator-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  .validator-left {
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .validator-right {
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    padding: 16px;
+    gap: 14px;
+    background: var(--bg);
+  }
+
+  .phase2-checklist {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .phase2-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 10px;
+    border-radius: 4px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    font-family: var(--mono);
+    font-size: 11px;
+  }
+
+  .phase2-icon { font-size: 13px; flex-shrink: 0; }
+  .phase2-label { flex: 1; color: var(--text2); }
+  .phase2-item.pass .phase2-icon { content: '✓'; color: var(--teal); }
+  .phase2-item.fail .phase2-icon { content: '✗'; color: var(--red); }
+  .phase2-item.na .phase2-icon { color: var(--text3); }
+
+  .val-section-title {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.18em;
+    color: var(--text3);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .val-msg-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-height: 220px;
+    overflow-y: auto;
+  }
+
+  .val-msg {
+    font-family: var(--mono);
+    font-size: 10px;
+    line-height: 1.5;
+    padding: 4px 8px;
+    border-radius: 3px;
+    word-break: break-word;
+  }
+  .val-msg.err { background: rgba(226,75,75,0.1); color: var(--red); border-left: 2px solid var(--red); }
+  .val-msg.warn { background: rgba(230,160,32,0.08); color: var(--amber); border-left: 2px solid var(--amber); }
+
+  .val-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 4px;
+  }
+  .val-badge.valid { background: rgba(29,185,117,0.15); color: var(--teal); border: 1px solid rgba(29,185,117,0.3); }
+  .val-badge.invalid { background: rgba(226,75,75,0.12); color: var(--red); border: 1px solid rgba(226,75,75,0.25); }
+  .val-badge.pending { background: rgba(106,117,133,0.1); color: var(--text2); border: 1px solid var(--border); }
+  /* ── Deeja Chat Panel ── */
+  .chat-panel {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow: hidden;
+    background: var(--bg);
+  }
+  .chat-history {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .chat-bubble {
+    max-width: 80%;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-family: var(--mono);
+    font-size: 12px;
+    line-height: 1.5;
+    word-break: break-word;
+  }
+  .chat-bubble.user {
+    align-self: flex-end;
+    background: rgba(127,108,255,0.15);
+    color: var(--text);
+    border: 1px solid rgba(127,108,255,0.3);
+    border-bottom-right-radius: 2px;
+  }
+  .chat-bubble.deeja {
+    align-self: flex-start;
+    background: var(--bg2);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-bottom-left-radius: 2px;
+  }
+  .chat-input-area {
+    display: flex;
+    gap: 12px;
+    padding: 16px;
+    background: var(--bg2);
+    border-top: 1px solid var(--border);
+  }
+  .chat-input {
+    flex: 1;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 12px;
+    resize: none;
+    outline: none;
+    max-height: 120px;
+  }
+  .chat-input:focus {
+    border-color: var(--purple);
+  }
+  .chat-card {
+    margin-top: 12px;
+    padding: 12px;
+    background: rgba(0,0,0,0.2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+  }
+  .chat-card-title {
+    font-weight: 600;
+    color: var(--teal);
+    margin-bottom: 4px;
+  }
 </style>
 </head>
 <body>
@@ -691,7 +939,10 @@
     </div>
 
     <hr class="sidebar-divider"/>
-    <div class="section-label">LLM PROVIDER</div>
+    <div class="section-label" style="display:flex;justify-content:space-between;align-items:center;">
+      <span>LLM PROVIDER</span>
+      <div id="providerBadge" style="font-family:var(--mono);font-size:9px;padding:2px 6px;border-radius:3px;background:rgba(106,117,133,0.1);color:var(--text3);border:1px solid var(--border);">UNKNOWN</div>
+    </div>
     <div class="config-group">
       <div class="field">
         <label>PROVIDER</label>
@@ -763,6 +1014,9 @@
       <div class="tab" onclick="switchTab('agents', this)">AGENT REGISTRY</div>
       <div class="tab" onclick="switchTab('health', this)">HEALTH CHECK</div>
       <div class="tab" onclick="switchTab('log', this)">AUDIT LOG</div>
+      <div class="tab" onclick="switchTab('runs', this)">WORKFLOW RUNS</div>
+      <div class="tab" onclick="switchTab('validator', this)">CONTRACT VALIDATOR</div>
+      <div class="tab" onclick="switchTab('deeja', this)">DEEJA CHAT</div>
     </div>
 
     <!-- ── INVOKE PANEL ── -->
@@ -880,6 +1134,96 @@
       </div>
       <div class="log-panel" id="logPanel">
         <div class="log-empty">No events yet</div>
+      </div>
+    </div>
+
+    <!-- ── WORKFLOW RUNS PANEL ── -->
+    <div class="panel" id="panel-runs">
+      <div class="panel-header" style="flex-shrink:0;">
+        <span class="panel-title">WORKFLOW RUN REPORTS</span>
+        <button class="btn btn-secondary" onclick="loadWorkflowRuns()" style="font-size:10px;">&#8635; REFRESH</button>
+      </div>
+      <div class="runs-panel" id="runsPanel">
+        <div style="text-align:center;color:var(--text3);font-family:var(--mono);font-size:11px;padding:40px 0;">Connect to backend to load run reports</div>
+      </div>
+    </div>
+
+    <!-- ── CONTRACT VALIDATOR PANEL ── -->
+    <div class="panel" id="panel-validator">
+      <div class="validator-grid">
+
+        <!-- left: input -->
+        <div class="validator-left">
+          <div class="panel-header">
+            <span class="panel-title">WORKFLOW JSON</span>
+            <div style="display:flex;gap:6px;">
+              <button class="btn btn-secondary" onclick="loadSampleWorkflow()" style="font-size:10px;">&#9656; SAMPLE</button>
+              <button class="btn btn-secondary" onclick="formatValidatorJson()" style="font-size:10px;">{ } FORMAT</button>
+              <button class="btn btn-primary" id="validateBtn" onclick="validateWorkflowJson()" style="font-size:10px;">✓ VALIDATE</button>
+            </div>
+          </div>
+          <textarea id="validatorInput" spellcheck="false" style="flex:1;background:var(--bg);border:none;outline:none;color:var(--text);font-family:var(--mono);font-size:12px;line-height:1.6;padding:16px;resize:none;tab-size:2;" placeholder='{
+  "workflow": {
+    "id": "my-workflow",
+    "name": "My Workflow",
+    "goal": "...",
+    "agents": [ { "id": "task-planner" } ]
+  }
+}'></textarea>
+        </div>
+
+        <!-- right: results -->
+        <div class="validator-right" id="validatorResults">
+
+          <!-- status badge -->
+          <div>
+            <div class="val-section-title">VALIDATION STATUS</div>
+            <div class="val-badge pending" id="valStatusBadge">▸ Paste a workflow JSON and click VALIDATE</div>
+          </div>
+
+          <!-- Phase 2 checklist -->
+          <div>
+            <div class="val-section-title">PHASE 2 CONTRACT CHECKLIST</div>
+            <div class="phase2-checklist" id="phase2Checklist">
+              <div class="phase2-item na" id="p2-executedBy">   <span class="phase2-icon">◦</span><span class="phase2-label">executedBy</span><span style="font-size:9px;color:var(--text3);">not checked</span></div>
+              <div class="phase2-item na" id="p2-contextPassing"><span class="phase2-icon">◦</span><span class="phase2-label">contextPassing</span><span style="font-size:9px;color:var(--text3);">not checked</span></div>
+              <div class="phase2-item na" id="p2-decisionLog">  <span class="phase2-icon">◦</span><span class="phase2-label">decisionLog</span><span style="font-size:9px;color:var(--text3);">not checked</span></div>
+              <div class="phase2-item na" id="p2-failClass">    <span class="phase2-icon">◦</span><span class="phase2-label">failureClassification</span><span style="font-size:9px;color:var(--text3);">not checked</span></div>
+              <div class="phase2-item na" id="p2-compliant">    <span class="phase2-icon">◦</span><span class="phase2-label">Phase 2 Compliant</span><span style="font-size:9px;color:var(--text3);">not checked</span></div>
+            </div>
+          </div>
+
+          <!-- errors -->
+          <div id="valErrorsSection" style="display:none;">
+            <div class="val-section-title">ERRORS</div>
+            <div class="val-msg-list" id="valErrors"></div>
+          </div>
+
+          <!-- warnings -->
+          <div id="valWarningsSection" style="display:none;">
+            <div class="val-section-title">WARNINGS</div>
+            <div class="val-msg-list" id="valWarnings"></div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ── DEEJA CHAT PANEL ── -->
+    <div class="panel" id="panel-deeja">
+      <div class="chat-panel">
+        <div class="panel-header" style="flex-shrink:0; border-bottom: 1px solid var(--border);">
+          <span class="panel-title">DEEJA — ZYNX PERSONA LAYER</span>
+        </div>
+        <div class="chat-history" id="deejaChatHistory">
+          <div class="chat-bubble deeja">
+            สวัสดีค่ะ ฉันคือ Deeja ผู้ช่วยประสานงาน Zynx ของคุณ พิมพ์สิ่งที่คุณต้องการให้ฉันช่วยได้เลยค่ะ 😊
+          </div>
+        </div>
+        <div class="chat-input-area">
+          <textarea id="deejaInput" class="chat-input" rows="1" placeholder="Type your message... (Enter to send)"></textarea>
+          <button class="btn btn-primary" id="deejaSendBtn" onclick="sendDeejaMessage()" style="align-self: flex-end; padding: 12px 20px;">SEND</button>
+        </div>
       </div>
     </div>
 
@@ -1137,6 +1481,31 @@ async function connectBackend() {
     setStatus('ok', `CONNECTED · ${data.service || 'zynx-backend'} v${data.version || '?'}`);
     addLog('ok', `Backend connected: ${JSON.stringify(data)}`);
     showToast('✓ Connected to backend');
+
+    // Update Provider Status Badge
+    const badge = $('providerBadge');
+    if (badge && data.provider) {
+      const p = data.provider;
+      if (p.provider === 'local') {
+        badge.textContent = 'LOCAL MODE';
+        badge.style.background = 'rgba(106,117,133,0.1)';
+        badge.style.color = 'var(--text2)';
+        badge.style.borderColor = 'var(--border)';
+      } else if (p.provider === 'openai') {
+        if (p.readyForLLM) {
+          badge.textContent = 'OpenAI READY';
+          badge.style.background = 'rgba(29,185,117,0.15)';
+          badge.style.color = 'var(--teal)';
+          badge.style.borderColor = 'rgba(29,185,117,0.3)';
+        } else {
+          badge.textContent = p.hasApiKey ? 'OpenAI MISSING MODEL' : 'OpenAI NO KEY';
+          badge.style.background = 'rgba(230,160,32,0.15)';
+          badge.style.color = 'var(--amber)';
+          badge.style.borderColor = 'rgba(230,160,32,0.3)';
+        }
+      }
+    }
+
     await loadAgents();
     $('invokeBtn').disabled = false;
   } catch (err) {
@@ -1404,13 +1773,333 @@ function switchTab(name, el) {
   if (el) el.classList.add('active');
 }
 
+
+// ── Workflow Runs ─────────────────────────────────────────────────────────────
+let runReports = [];
+
+async function loadWorkflowRuns() {
+  if (!connected) { showToast('Connect first'); return; }
+  const panel = $('runsPanel');
+  panel.innerHTML = `<div style="text-align:center;color:var(--text3);font-family:var(--mono);font-size:11px;padding:40px 0;"><span class="spinner"></span> Loading run reports...</div>`;
+  try {
+    const { res, data } = await fetchJson(`${getConfig().backendUrl}/workflow/runs`, { headers: makeHeaders() });
+    if (!res.ok) throw new Error(`HTTP ${res.status}: ${data?.error || 'could not load runs'}`);
+    runReports = data.runs || [];
+    addLog('ok', `Loaded ${runReports.length} workflow run reports`);
+    renderWorkflowRuns();
+  } catch (err) {
+    addLog('err', `Failed to load workflow runs: ${err.message}`);
+    panel.innerHTML = `<div style="text-align:center;color:var(--red);font-family:var(--mono);font-size:11px;padding:40px 0;">✗ ${escHtml(err.message)}</div>`;
+  }
+}
+
+function renderWorkflowRuns() {
+  const panel = $('runsPanel');
+  if (!runReports.length) {
+    panel.innerHTML = `<div style="text-align:center;color:var(--text3);font-family:var(--mono);font-size:11px;padding:40px 0;">No run reports found in reports/workflow-runs/</div>`;
+    return;
+  }
+  panel.innerHTML = runReports.map((r, i) => {
+    const modeClass = r.mode === 'dry-run' ? 'dry-run' : r.mode === 'execute' ? 'execute' : 'unknown';
+    const dateStr = r.date ? new Date(r.date).toLocaleString() : r.filename?.slice(0, 10) || '—';
+    const statsHtml = [
+      r.stepCount != null ? `<span class="run-stat steps">${r.stepCount} steps</span>` : '',
+      r.passed != null ? `<span class="run-stat pass">✓ ${r.passed}</span>` : '',
+      r.failed != null && r.failed > 0 ? `<span class="run-stat fail">✗ ${r.failed}</span>` : '',
+      r.warnings != null && r.warnings > 0 ? `<span class="run-stat warn">⚠ ${r.warnings}</span>` : '',
+    ].filter(Boolean).join('');
+    return `<div class="run-card" id="run-card-${i}">
+      <div class="run-card-header" onclick="expandRunDetail(${i})">
+        <span class="run-mode-pill ${modeClass}">${r.mode || '?'}</span>
+        <span class="run-card-name">${escHtml(r.workflowName || r.filename)}</span>
+        <div class="run-card-stats">${statsHtml}</div>
+        <span class="run-card-date">${escHtml(dateStr)}</span>
+        <span style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-left:4px;">▸</span>
+      </div>
+      <div class="run-card-body" id="run-body-${i}">
+        <div style="font-family:var(--mono);font-size:10px;color:var(--text3);padding:4px 0;">Click to load full report...</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function expandRunDetail(i) {
+  const body = $(`run-body-${i}`);
+  if (!body) return;
+  const isOpen = body.classList.contains('open');
+
+  // Close all other cards
+  document.querySelectorAll('.run-card-body').forEach(b => b.classList.remove('open'));
+
+  if (isOpen) return; // toggle off
+
+  const r = runReports[i];
+  if (!r?.filename) return;
+  body.classList.add('open');
+  body.innerHTML = `<span class="spinner"></span> Loading ${escHtml(r.filename)}...`;
+
+  try {
+    const { res, data } = await fetchJson(`${getConfig().backendUrl}/workflow/runs/${encodeURIComponent(r.filename)}`, { headers: makeHeaders() });
+    if (!res.ok) throw new Error(`HTTP ${res.status}: ${data?.error || 'could not load'}`);
+    body.innerHTML = `<pre style="font-family:var(--mono);font-size:10px;line-height:1.6;overflow-x:auto;">${highlightJson(data)}</pre>`;
+  } catch (err) {
+    body.innerHTML = `<span style="color:var(--red);font-family:var(--mono);font-size:10px;">✗ ${escHtml(err.message)}</span>`;
+  }
+}
+
+// ── Contract Validator ────────────────────────────────────────────────────────
+
+function setPhase2Item(id, pass, label) {
+  const el = $(id);
+  if (!el) return;
+  el.className = 'phase2-item ' + (pass ? 'pass' : 'fail');
+  el.innerHTML = `<span class="phase2-icon" style="color:${pass ? 'var(--teal)' : 'var(--red)'};">${pass ? '✓' : '✗'}</span><span class="phase2-label">${label}</span><span style="font-size:9px;color:${pass ? 'var(--teal)' : 'var(--red)'};">${pass ? 'present' : 'missing'}</span>`;
+}
+
+async function validateWorkflowJson() {
+  const raw = $('validatorInput').value.trim();
+  if (!raw) { showToast('Paste a workflow JSON first'); return; }
+
+  let parsed;
+  try {
+    parsed = JSON.parse(raw);
+  } catch (e) {
+    $('valStatusBadge').className = 'val-badge invalid';
+    $('valStatusBadge').textContent = '✗ Invalid JSON — ' + e.message;
+    return;
+  }
+
+  const btn = $('validateBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>VALIDATING...';
+
+  try {
+    let result;
+
+    if (connected) {
+      // Call backend endpoint
+      const { res, data } = await fetchJson(`${getConfig().backendUrl}/workflow/validate`, {
+        method: 'POST',
+        headers: makeHeaders(),
+        body: JSON.stringify(parsed)
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}: ${data?.error || 'validation failed'}`);
+      result = data;
+    } else {
+      // Client-side fallback: only check basic structure
+      const errors = [];
+      const warnings = [];
+      const wf = parsed?.workflow;
+      if (!wf) { errors.push('workflow root key is missing'); }
+      else {
+        if (!Array.isArray(wf.agents) || !wf.agents.length) errors.push('[workflow.agents] Array must contain at least 1 element(s)');
+        if (!wf.id) warnings.push('workflow.id is missing — recommended for run report traceability');
+        if (!wf.name) warnings.push('workflow.name is missing — recommended for human-readable reports');
+        if (!wf.goal) warnings.push('workflow.goal is missing — recommended for audit trail');
+        if (!wf.executedBy) warnings.push('[Phase 2] workflow.executedBy is not set');
+        if (!wf.contextPassing) warnings.push('[Phase 2] workflow.contextPassing is not set');
+        if (!Array.isArray(wf.decisionLog) || !wf.decisionLog.length) warnings.push('[Phase 2] workflow.decisionLog is empty');
+      }
+      result = {
+        valid: errors.length === 0,
+        errors,
+        warnings,
+        phase2: {
+          executedBy: typeof wf?.executedBy === 'string' && wf.executedBy.length > 0,
+          contextPassing: wf?.contextPassing !== undefined,
+          decisionLog: Array.isArray(wf?.decisionLog) && wf.decisionLog.length > 0,
+          failureClassification: false,
+          compliant: false
+        }
+      };
+    }
+
+    // ── Render status badge ──
+    const badge = $('valStatusBadge');
+    if (result.valid) {
+      badge.className = 'val-badge valid';
+      badge.textContent = `✓ VALID — ${result.warnings.length} warning(s)`;
+    } else {
+      badge.className = 'val-badge invalid';
+      badge.textContent = `✗ INVALID — ${result.errors.length} error(s), ${result.warnings.length} warning(s)`;
+    }
+
+    // ── Phase 2 checklist ──
+    const p2 = result.phase2 || {};
+    setPhase2Item('p2-executedBy',      p2.executedBy,      'executedBy');
+    setPhase2Item('p2-contextPassing',  p2.contextPassing,  'contextPassing');
+    setPhase2Item('p2-decisionLog',     p2.decisionLog,     'decisionLog');
+    setPhase2Item('p2-failClass',       p2.failureClassification, 'failureClassification');
+    const compliantEl = $('p2-compliant');
+    if (compliantEl) {
+      compliantEl.className = 'phase2-item ' + (p2.compliant ? 'pass' : 'fail');
+      compliantEl.innerHTML = `<span class="phase2-icon" style="color:${p2.compliant ? 'var(--teal)' : 'var(--red)'};">${p2.compliant ? '✓' : '✗'}</span><span class="phase2-label" style="font-weight:600;">Phase 2 Compliant</span><span style="font-size:9px;color:${p2.compliant ? 'var(--teal)' : 'var(--amber)'};">${p2.compliant ? 'COMPLIANT' : 'INCOMPLETE'}</span>`;
+    }
+
+    // ── Errors ──
+    const errSec = $('valErrorsSection');
+    const errList = $('valErrors');
+    if (result.errors.length) {
+      errSec.style.display = '';
+      errList.innerHTML = result.errors.map(e => `<div class="val-msg err">${escHtml(e)}</div>`).join('');
+    } else {
+      errSec.style.display = 'none';
+    }
+
+    // ── Warnings ──
+    const warnSec = $('valWarningsSection');
+    const warnList = $('valWarnings');
+    if (result.warnings.length) {
+      warnSec.style.display = '';
+      warnList.innerHTML = result.warnings.map(w => `<div class="val-msg warn">${escHtml(w)}</div>`).join('');
+    } else {
+      warnSec.style.display = 'none';
+    }
+
+    addLog(result.valid ? 'ok' : 'warn', `Workflow validated: valid=${result.valid} errors=${result.errors.length} warnings=${result.warnings.length} phase2=${p2.compliant ? 'compliant' : 'incomplete'}`);
+
+  } catch (err) {
+    $('valStatusBadge').className = 'val-badge invalid';
+    $('valStatusBadge').textContent = '✗ ' + err.message;
+    addLog('err', `Validation request failed: ${err.message}`);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '✓ VALIDATE';
+  }
+}
+
+function formatValidatorJson() {
+  try {
+    const v = JSON.parse($('validatorInput').value);
+    $('validatorInput').value = JSON.stringify(v, null, 2);
+  } catch { showToast('Invalid JSON'); }
+}
+
+function loadSampleWorkflow() {
+  const sample = {
+    workflow: {
+      id: 'sample-workflow',
+      name: 'Sample Workflow',
+      goal: 'Demonstrate Phase 2 contract fields',
+      created: new Date().toISOString(),
+      executedBy: 'task-planner',
+      contextPassing: { tenantId: 'dev', runId: 'sample-001' },
+      decisionLog: [
+        { step: 1, agentId: 'validator', decision: 'Schema valid', outcome: 'pass', ts: new Date().toISOString() }
+      ],
+      schedule: { cron: '0 0 * * *', timezone: 'LOCAL' },
+      artifacts: { report_output_dir: 'reports/workflow-runs' },
+      agents: [
+        { step: 1, id: 'task-planner', name: 'Task Planner', role: 'Job decomposer', category: 'core', estimatedDuration: 3 },
+        { step: 2, id: 'validator',    name: 'Schema Validator', role: 'Zod check',  category: 'data',   estimatedDuration: 2 },
+        { step: 3, id: 'report-gen',   name: 'Report Generator', role: 'PDF output', category: 'output', estimatedDuration: 3 },
+        { step: 4, id: 'logger',       name: 'Logger', role: 'Audit trail',          category: 'output', estimatedDuration: 1 }
+      ]
+    }
+  };
+  $('validatorInput').value = JSON.stringify(sample, null, 2);
+  showToast('Sample workflow loaded');
+}
+
+// ── Deeja Chat ───────────────────────────────────────────────────────────────
+
+const deejaInput = $('deejaInput');
+if (deejaInput) {
+  deejaInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendDeejaMessage();
+    }
+  });
+}
+
+async function sendDeejaMessage() {
+  if (!connected) { showToast('Connect first'); return; }
+  const inputEl = $('deejaInput');
+  const text = inputEl.value.trim();
+  if (!text) return;
+
+  const historyEl = $('deejaChatHistory');
+  const sendBtn = $('deejaSendBtn');
+  
+  // Add User Bubble
+  const userDiv = document.createElement('div');
+  userDiv.className = 'chat-bubble user';
+  userDiv.textContent = text;
+  historyEl.appendChild(userDiv);
+  
+  inputEl.value = '';
+  inputEl.disabled = true;
+  sendBtn.disabled = true;
+  historyEl.scrollTop = historyEl.scrollHeight;
+
+  // Add Loading Bubble
+  const loadingDiv = document.createElement('div');
+  loadingDiv.className = 'chat-bubble deeja';
+  loadingDiv.innerHTML = '<span class="spinner"></span> Deeja is typing...';
+  historyEl.appendChild(loadingDiv);
+  historyEl.scrollTop = historyEl.scrollHeight;
+
+  try {
+    const { res, data } = await fetchJson(`${getConfig().backendUrl}/agents/deeja/invoke`, {
+      method: 'POST',
+      headers: makeHeaders(),
+      body: JSON.stringify({ goal: text })
+    });
+    
+    loadingDiv.remove();
+
+    if (!res.ok) throw new Error(`HTTP ${res.status}: ${data?.error || 'invoke failed'}`);
+    
+    // Add Deeja Bubble
+    const deejaDiv = document.createElement('div');
+    deejaDiv.className = 'chat-bubble deeja';
+    
+    let bubbleHtml = `<div style="white-space: pre-wrap;">${escHtml(data.message || 'Done.')}</div>`;
+    
+    if (data.actionableCard) {
+      const card = data.actionableCard;
+      const actionsHtml = Array.isArray(card.suggestedActions) 
+        ? `<ul style="margin-top:8px;padding-left:16px;">${card.suggestedActions.map(a => `<li>${escHtml(a)}</li>`).join('')}</ul>`
+        : '';
+        
+      bubbleHtml += `
+        <div class="chat-card">
+          <div class="chat-card-title">${escHtml(card.title || 'Summary')}</div>
+          <div style="font-size:10px;color:var(--text3);margin-bottom:8px;">Status: ${escHtml(card.status || 'N/A')}</div>
+          ${card.summary ? `<div>${escHtml(card.summary)}</div>` : ''}
+          ${actionsHtml}
+        </div>
+      `;
+    }
+    
+    deejaDiv.innerHTML = bubbleHtml;
+    historyEl.appendChild(deejaDiv);
+    
+  } catch (err) {
+    loadingDiv.remove();
+    const errDiv = document.createElement('div');
+    errDiv.className = 'chat-bubble deeja';
+    errDiv.style.borderColor = 'var(--red)';
+    errDiv.innerHTML = `<span style="color:var(--red);">✗ ${escHtml(err.message)}</span>`;
+    historyEl.appendChild(errDiv);
+  } finally {
+    inputEl.disabled = false;
+    sendBtn.disabled = false;
+    inputEl.focus();
+    historyEl.scrollTop = historyEl.scrollHeight;
+  }
+}
+
 // init log
 loadUiConfig();
 wireConfigPersistence();
 addLog('info', `Zynx MCP Console initialized. Backend URL: ${getConfig().backendUrl}`);
 if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
   addLog('info', 'Auto-connect enabled because the dashboard is served over HTTP.');
-  connectBackend();
+  connectBackend().then(() => {
+    if (connected) loadWorkflowRuns();
+  });
 }
 </script>
 </body>

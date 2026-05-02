@@ -199,3 +199,37 @@ export async function generateProviderText(request: ProviderTextRequest): Promis
     return providerDisabledResult(request.fallbackText, message);
   }
 }
+
+// ─── Provider Status ───────────────────────────────────────────────────────────
+
+export type ProviderConfigStatus = {
+  provider: string;
+  configured: boolean;
+  hasApiKey: boolean;
+  hasModel: boolean;
+  requireProvider: boolean;
+  baseUrl: string;
+  readyForLLM: boolean;
+};
+
+/**
+ * Return current provider configuration state.
+ * Never exposes key values — only boolean presence flags.
+ */
+export function getProviderStatus(): ProviderConfigStatus {
+  const provider = (llmProvider || "local").toLowerCase();
+  const hasApiKey = Boolean(process.env.OPENAI_API_KEY?.trim());
+  const hasModel = Boolean(openaiModel?.trim());
+  const configured = provider === "openai";
+  const readyForLLM = configured && hasApiKey && hasModel;
+
+  return {
+    provider,
+    configured,
+    hasApiKey,
+    hasModel,
+    requireProvider: llmRequireProvider,
+    baseUrl: openaiBaseUrl,
+    readyForLLM,
+  };
+}

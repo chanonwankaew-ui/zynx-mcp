@@ -2,10 +2,13 @@ import express from "express";
 import { z } from "zod";
 import cors from "cors";
 import path from "node:path";
+import fs from "node:fs";
 import { fileURLToPath } from "node:url";
 import { agentBackendPort } from "./config.js";
 import { AGENT_REGISTRY, type AgentMeta, findAgent } from "./agentRegistry.js";
 import { invokeAgentHandler } from "./agentHandlers.js";
+import { validateWorkflowContract } from "./workflowSchema.js";
+import { getProviderStatus } from "./providerClient.js";
 import type { ProviderRuntimeConfig } from "./providerClient.js";
 import { describeCorsOrigins, zynxCorsOptions } from "./corsConfig.js";
 
@@ -146,7 +149,7 @@ app.get("/zynx-mcp", (_req, res) => {
 });
 
 app.get("/health", (_req, res) => {
-  res.json({ ok: true, service: "zynx-agent-backend", version: "0.1.0" });
+  res.json({ ok: true, service: "zynx-agent-backend", version: "0.1.0", provider: getProviderStatus() });
 });
 
 // GET /agents — List all agents
@@ -255,14 +258,125 @@ app.get("/agents/:agentId/health", async (req, res) => {
   }
 });
 
+// GET /agents/:agentId/skill
+app.get("/agents/:agentId/skill", (req, res) => {
+  const { agentId } = req.params;
+  const skillPath = path.join(repoRoot, "docs", "skills", `${agentId}.md`);
+  if (fs.existsSync(skillPath)) {
+    res.json({ skill: fs.readFileSync(skillPath, "utf-8") });
+  } else {
+    res.json({ skill: "" });
+  }
+});
+
+// POST /agents/:agentId/skill
+app.post("/agents/:agentId/skill", (req, res) => {
+  const { agentId } = req.params;
+  const { skill } = req.body;
+  const dirPath = path.join(repoRoot, "docs", "skills");
+  if (!fs.existsSync(dirPath)) {
+    fs.mkdirSync(dirPath, { recursive: true });
+  }
+  const skillPath = path.join(dirPath, `${agentId}.md`);
+  fs.writeFileSync(skillPath, skill, "utf-8");
+  res.json({ success: true });
+});
+
+// ─── Workflow Routes ──────────────────────────────────────────────────────────
+
+// GET /provider/status — safe provider config snapshot (no key values)
+app.get("/provider/status", (_req, res) => {
+  res.json(getProviderStatus());
+});
+
+// POST /workflow/validate — Phase 2 contract validation
+app.post("/workflow/validate", (req, res) => {
+  try {
+    const body = req.body;
+    if (!body || typeof body !== "object") {
+      return res.status(400).json({ error: "Request body must be a JSON object" });
+    }
+    const result = validateWorkflowContract(body);
+    return res.json(result);
+  } catch (err) {
+    const e = err as any;
+    return res.status(500).json({ error: e?.message ?? "Validation error" });
+  }
+});
+
+// GET /workflow/runs — list run report summaries from reports/workflow-runs/
+app.get("/workflow/runs", (_req, res) => {
+  const runsDir = path.join(repoRoot, "reports", "workflow-runs");
+  try {
+    if (!fs.existsSync(runsDir)) {
+      return res.json({ runs: [] });
+    }
+    const files = fs.readdirSync(runsDir)
+      .filter(f => f.endsWith(".json") && f !== ".gitkeep")
+      .sort()
+      .reverse();
+
+    const runs = files.map(filename => {
+      const filePath = path.join(runsDir, filename);
+      try {
+        const raw = fs.readFileSync(filePath, "utf-8");
+        const data = JSON.parse(raw);
+        // Extract summary fields from run report without returning full content
+        const run = data.run ?? data;
+        return {
+          filename,
+          workflowId: run.workflowId ?? run.workflow?.id ?? null,
+          workflowName: run.workflowName ?? run.workflow?.name ?? filename.replace(/\.json$/, ""),
+          mode: run.mode ?? (filename.includes("dry-run") ? "dry-run" : filename.includes("execute") ? "execute" : "unknown"),
+          date: run.startedAt ?? run.ts ?? null,
+          stepCount: Array.isArray(run.steps) ? run.steps.length : (Array.isArray(run.agentResults) ? run.agentResults.length : null),
+          status: run.status ?? null,
+          passed: run.passed ?? null,
+          failed: run.failed ?? null,
+          warnings: run.warnings ?? null,
+        };
+      } catch {
+        return { filename, workflowName: filename.replace(/\.json$/, ""), error: "could not parse" };
+      }
+    });
+
+    return res.json({ runs });
+  } catch (err) {
+    const e = err as any;
+    return res.status(500).json({ error: e?.message ?? "Could not list workflow runs" });
+  }
+});
+
+// GET /workflow/runs/:filename — full run report content
+app.get("/workflow/runs/:filename", (req, res) => {
+  const { filename } = req.params;
+  // Safety: only allow alphanumeric, dash, underscore, dot — no path traversal
+  if (!/^[\w.-]+\.json$/.test(filename)) {
+    return res.status(400).json({ error: "Invalid filename" });
+  }
+  const filePath = path.join(repoRoot, "reports", "workflow-runs", filename);
+  if (!fs.existsSync(filePath)) {
+    return res.status(404).json({ error: "Run report not found" });
+  }
+  try {
+    const data = JSON.parse(fs.readFileSync(filePath, "utf-8"));
+    return res.json(data);
+  } catch {
+    return res.status(500).json({ error: "Could not parse run report" });
+  }
+});
+
 // ─── Start Server ──────────────────────────────────────────────────────────────
 
 app.listen(agentBackendPort, () => {
   console.log(`🤖 Zynx Agent Backend`);
   console.log(`   Port: ${agentBackendPort}`);
-  console.log(`   Health:       http://localhost:${agentBackendPort}/health`);
-  console.log(`   Agents:       http://localhost:${agentBackendPort}/agents`);
-  console.log(`   Invoke:       POST http://localhost:${agentBackendPort}/agents/:agentId/invoke`);
-  console.log(`   Agent Health: GET  http://localhost:${agentBackendPort}/agents/:agentId/health`);
-  console.log(`   CORS origin:  ${describeCorsOrigins()}`);
+  console.log(`   Health:         http://localhost:${agentBackendPort}/health`);
+  console.log(`   Agents:         http://localhost:${agentBackendPort}/agents`);
+  console.log(`   Invoke:         POST http://localhost:${agentBackendPort}/agents/:agentId/invoke`);
+  console.log(`   Agent Health:   GET  http://localhost:${agentBackendPort}/agents/:agentId/health`);
+  console.log(`   Workflow Runs:  GET  http://localhost:${agentBackendPort}/workflow/runs`);
+  console.log(`   WF Validate:    POST http://localhost:${agentBackendPort}/workflow/validate`);
+  console.log(`   Provider:       GET  http://localhost:${agentBackendPort}/provider/status`);
+  console.log(`   CORS origin:    ${describeCorsOrigins()}`);
 });

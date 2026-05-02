@@ -146,6 +146,11 @@ export function createZynxMcpServer() {
         maxTokens: z.number().int().min(1).max(8192).optional()
       }).optional()
     },
+    {
+      readOnlyHint: false,
+      openWorldHint: false,
+      destructiveHint: false
+    },
     async (args) => {
       const result = await invokeAgent(args);
       return jsonText(result);
@@ -158,6 +163,11 @@ export function createZynxMcpServer() {
     {
       agentId: z.string().min(1).describe("Zynx agent ID.")
     },
+    {
+      readOnlyHint: true,
+      openWorldHint: false,
+      destructiveHint: false
+    },
     async (args) => {
       const result = await getAgentHealth(args);
       return jsonText(result);
@@ -168,6 +178,11 @@ export function createZynxMcpServer() {
     "list_agents",
     "List agents available in the Zynx Agent Registry.",
     {},
+    {
+      readOnlyHint: true,
+      openWorldHint: false,
+      destructiveHint: false
+    },
     async () => {
       const result = await listAgents();
       return jsonText(result);
