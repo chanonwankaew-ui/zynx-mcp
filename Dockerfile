@@ -31,6 +31,7 @@ COPY --from=builder /app/dist ./dist
 COPY workflows/ ./workflows/
 COPY docs/ ./docs/
 COPY AGENTS.md ./
+COPY zynx-mcp-dashboard.html ./
 
 # Set environment variables
 ENV NODE_ENV=production
