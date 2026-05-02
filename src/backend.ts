@@ -18,6 +18,15 @@ const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), ".."
 app.use(cors(zynxCorsOptions()));
 app.use(express.json());
 
+// ─── Middleware ───────────────────────────────────────────────────────────────
+
+app.use((req, res, next) => {
+  const traceId = req.headers["x-zynx-trace-id"] as string || `tr-${Math.random().toString(36).slice(2, 11)}`;
+  req.headers["x-zynx-trace-id"] = traceId;
+  res.setHeader("x-zynx-trace-id", traceId);
+  next();
+});
+
 // ─── Zod Schemas ──────────────────────────────────────────────────────────────
 
 const InvokePayloadSchema = z.object({
@@ -36,7 +45,8 @@ function getAuth(req: express.Request) {
   const tenantId = req.headers["x-zynx-tenant-id"] as string || "dev";
   const userId = req.headers["x-zynx-user-id"] as string || "anonymous";
   const roles = (req.headers["x-zynx-roles"] as string || "user").split(",");
-  return { tenantId, userId, roles };
+  const traceId = req.headers["x-zynx-trace-id"] as string;
+  return { tenantId, userId, roles, traceId };
 }
 
 function headerString(req: express.Request, name: string) {
@@ -129,7 +139,17 @@ async function getAgentHealthMetrics(_agentId: string) {
 
 // ─── Audit Logger ──────────────────────────────────────────────────────────────
 
-function auditLog(event: { agentId: string; tenantId: string; userId: string; action: string; status: number }) {
+function auditLog(event: { 
+  agentId: string; 
+  tenantId: string; 
+  userId: string; 
+  traceId: string;
+  action: string; 
+  status: number;
+  durationMs?: number;
+  provider?: string;
+  model?: string;
+}) {
   console.log(JSON.stringify({ ts: new Date().toISOString(), ...event }));
 }
 
@@ -174,7 +194,7 @@ app.get("/agents", (req, res) => {
 // POST /agents/:agentId/invoke
 app.post("/agents/:agentId/invoke", async (req, res) => {
   const { agentId } = req.params;
-  let auth = { tenantId: "", userId: "", roles: [] as string[] };
+  let auth = { tenantId: "", userId: "", roles: [] as string[], traceId: "" };
   const startMs = Date.now();
 
   try {
@@ -200,12 +220,23 @@ app.post("/agents/:agentId/invoke", async (req, res) => {
     const result = await invokeAgentHandler(agentId, payload.input, {
       tenantId: auth.tenantId,
       userId: auth.userId,
-      providerConfig: getProviderConfig(req)
+      providerConfig: getProviderConfig(req),
+      traceId: auth.traceId
     });
     const durationMs = Date.now() - startMs;
 
     // Audit
-    auditLog({ agentId, tenantId: auth.tenantId, userId: auth.userId, action: "invoke", status: 200 });
+    auditLog({ 
+      agentId, 
+      tenantId: auth.tenantId, 
+      userId: auth.userId, 
+      traceId: auth.traceId,
+      action: "invoke", 
+      status: 200,
+      durationMs,
+      provider: getProviderConfig(req)?.provider,
+      model: result.modelUsed
+    });
 
     // Response
     res.json({
@@ -222,8 +253,15 @@ app.post("/agents/:agentId/invoke", async (req, res) => {
     const e = err as any;
     const status = e?.status ?? 500;
     const message = e?.message ?? "Internal server error";
-    auditLog({ agentId, tenantId: auth.tenantId, userId: auth.userId, action: "invoke", status });
-    res.status(status).json({ error: message });
+    auditLog({ 
+      agentId, 
+      tenantId: auth.tenantId, 
+      userId: auth.userId, 
+      traceId: auth.traceId,
+      action: "invoke", 
+      status 
+    });
+    res.status(status).json({ error: message, traceId: auth.traceId });
   }
 });
 

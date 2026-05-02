@@ -11,6 +11,7 @@ import { generateProviderText, type ProviderRuntimeConfig, type ProviderTextResu
 export type AgentInvocationContext = {
   tenantId: string;
   userId: string;
+  traceId?: string;
   providerConfig?: ProviderRuntimeConfig;
 };
 
@@ -163,7 +164,9 @@ function uniqueAgentIds(agentIds: string[]): string[] {
 
 async function taskPlannerHandler(input: Record<string, unknown>, ctx: AgentInvocationContext): Promise<Record<string, unknown>> {
   const goal = getGoal(input);
+  const traceId = ctx.traceId || "no-trace";
   const agents = uniqueAgentIds(plannedAgentIdsForGoal(goal, input)).map(agentStep);
+  console.log(`[Agent][${traceId}] task-planner: Planned ${agents.length} agents for goal: ${goal.slice(0, 50)}...`);
   const workflowId = slugWorkflowName(stringify(input.workflowId) || goal);
   const workflowFile = createWorkflowFile({
     id: workflowId,
@@ -193,9 +196,10 @@ async function taskPlannerHandler(input: Record<string, unknown>, ctx: AgentInvo
     maxOutputTokens: 240,
     metadata: {
       agent_id: "task-planner",
-      tenant_id: ctx.tenantId
+      tenant_id: ctx.tenantId,
+      trace_id: traceId
     },
-    runtime: ctx.providerConfig
+    runtime: { ...ctx.providerConfig, traceId }
   });
 
   return {
@@ -217,6 +221,8 @@ async function taskPlannerHandler(input: Record<string, unknown>, ctx: AgentInvo
 
 async function deejaHandler(input: Record<string, unknown>, ctx: AgentInvocationContext): Promise<Record<string, unknown>> {
   const goal = getGoal(input);
+  const traceId = ctx.traceId || "no-trace";
+  console.log(`[Agent][${traceId}] deeja: Generating response for goal: ${goal.slice(0, 50)}...`);
   const context = asRecord(input.context);
   const rawResult = input.result ?? input.output ?? context.result ?? context.output ?? input;
   const hasThai = /[\u0E00-\u0E7F]/.test(goal) || /[\u0E00-\u0E7F]/.test(JSON.stringify(rawResult));
@@ -242,9 +248,10 @@ async function deejaHandler(input: Record<string, unknown>, ctx: AgentInvocation
     metadata: {
       agent_id: "deeja",
       tenant_id: ctx.tenantId,
-      language: hasThai ? "th" : "en"
+      language: hasThai ? "th" : "en",
+      trace_id: traceId
     },
-    runtime: ctx.providerConfig
+    runtime: { ...ctx.providerConfig, traceId }
   });
 
   return {

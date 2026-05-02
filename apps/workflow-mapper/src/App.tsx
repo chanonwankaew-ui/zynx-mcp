@@ -321,6 +321,22 @@ export default function App() {
   const [mcpForm, setMcpForm] = useState({ name: "", url: "", auth: "None" });
   const [vertexForm, setVertexForm] = useState({ projectId: "", location: "global", collectionId: "", dataStoreId: "" });
   const [isSavingSkill, setIsSavingSkill] = useState(false);
+  
+  // LLM Settings
+  const [showSettings, setShowSettings] = useState(false);
+  const [llmSettings, setLlmSettings] = useState(() => {
+    const saved = localStorage.getItem("zynx_llm_settings");
+    return saved ? JSON.parse(saved) : {
+      provider: "local",
+      apiKey: "",
+      baseUrl: "https://api.openai.com/v1",
+      model: "gpt-4o-mini"
+    };
+  });
+
+  useEffect(() => {
+    localStorage.setItem("zynx_llm_settings", JSON.stringify(llmSettings));
+  }, [llmSettings]);
 
   const parseSkillContent = (content) => {
     let parsed = { name: "", description: "", instructions: content, model: "Gemini 3 Flash (preview)", tools: ["Google Search", "URL Context"] };
@@ -498,8 +514,14 @@ ${skillForm.instructions}`;
       if (chatMode === "deeja") {
         const deejaRes = await fetch(`${ZYNX_BACKEND_URL}/agents/deeja/invoke`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ goal: userText })
+          headers: { 
+            "Content-Type": "application/json",
+            "x-zynx-llm-provider": llmSettings.provider,
+            "x-openai-api-key": llmSettings.apiKey,
+            "x-openai-base-url": llmSettings.baseUrl,
+            "x-openai-model": llmSettings.model
+          },
+          body: JSON.stringify({ input: { goal: userText } })
         });
         const deejaData = await deejaRes.json();
         if (!deejaRes.ok) throw new Error(deejaData.error || "Deeja request failed");
@@ -523,7 +545,13 @@ ${skillForm.instructions}`;
 
       const planRes = await fetch(`${ZYNX_BACKEND_URL}/agents/task-planner/invoke`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "x-zynx-llm-provider": llmSettings.provider,
+          "x-openai-api-key": llmSettings.apiKey,
+          "x-openai-base-url": llmSettings.baseUrl,
+          "x-openai-model": llmSettings.model
+        },
         body: JSON.stringify({ input: { goal: userText } })
       });
       const planData = await planRes.json();
@@ -656,7 +684,10 @@ ${skillForm.instructions}`;
           </button>
           <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:8,minWidth:0}}>
             <div style={{display:"flex", alignItems:"center", gap:16}}>
-              <div style={{fontSize:14, fontWeight:500, color:"var(--text-secondary)"}}>Zynx 1.0 (Local)</div>
+              <div onClick={()=>setShowSettings(true)} style={{fontSize:13, fontWeight:500, color:"var(--text-secondary)", cursor:"pointer", display:"flex", alignItems:"center", gap:6, padding:"4px 8px", borderRadius:4, background:"var(--bg-panel)"}}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                {llmSettings.provider === "local" ? "Local" : llmSettings.provider.toUpperCase()}
+              </div>
               
               <div style={{display:"flex", background:"var(--bg-panel)", border:"1px solid var(--border-color)", borderRadius:"100px", overflow:"hidden"}}>
                 <button onClick={() => setChatMode("workflow")} style={{background:chatMode==="workflow"?"var(--text-primary)":"transparent", color:chatMode==="workflow"?"var(--bg-main)":"var(--text-secondary)", border:"none", padding:"4px 12px", fontSize:12, fontWeight:500, cursor:"pointer", transition:"all 0.2s"}}>Workflow</button>
@@ -1123,15 +1154,58 @@ ${skillForm.instructions}`;
               </div>
             )}
             
-            <style>{`
-              @keyframes slideIn {
-                from { transform: translateX(100%); }
-                to { transform: translateX(0); }
-              }
-            `}</style>
           </div>
         </div>
       )}
+
+      {/* LLM Settings Modal */}
+      {showSettings && (
+        <div style={{position:"fixed", top:0, left:0, right:0, bottom:0, background:"rgba(0,0,0,0.8)", backdropFilter:"blur(8px)", zIndex:1000, display:"flex", alignItems:"center", justifyContent:"center"}}>
+          <div style={{width:400, background:"var(--bg-panel)", borderRadius:"var(--radius-xl)", border:"1px solid var(--border-color)", overflow:"hidden", boxShadow:"0 20px 50px rgba(0,0,0,0.5)"}}>
+            <div style={{padding:"20px", borderBottom:"1px solid var(--border-color)", display:"flex", justifyContent:"space-between", alignItems:"center"}}>
+              <div style={{fontWeight:600, fontSize:16, color:"var(--text-primary)"}}>LLM Provider Settings</div>
+              <button onClick={()=>setShowSettings(false)} style={{background:"transparent", border:"none", color:"var(--text-secondary)", cursor:"pointer"}}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+            </div>
+            <div style={{padding:"24px", display:"flex", flexDirection:"column", gap:20}}>
+              <div style={{display:"flex", flexDirection:"column", gap:8}}>
+                <label style={{fontSize:12, fontWeight:600, color:"var(--text-secondary)", textTransform:"uppercase"}}>Provider</label>
+                <select value={llmSettings.provider} onChange={e=>setLlmSettings({...llmSettings, provider: e.target.value})} style={{width:"100%", padding:"12px", borderRadius:"var(--radius-md)", border:"1px solid var(--border-color)", background:"var(--bg-main)", color:"var(--text-primary)", outline:"none"}}>
+                  <option value="local">Local (No LLM)</option>
+                  <option value="openai">OpenAI / Compatible</option>
+                  <option value="anthropic">Anthropic (Claude)</option>
+                  <option value="gemini">Google Gemini</option>
+                </select>
+              </div>
+
+              {llmSettings.provider !== "local" && (
+                <>
+                  <div style={{display:"flex", flexDirection:"column", gap:8}}>
+                    <label style={{fontSize:12, fontWeight:600, color:"var(--text-secondary)", textTransform:"uppercase"}}>API Key</label>
+                    <input type="password" value={llmSettings.apiKey} onChange={e=>setLlmSettings({...llmSettings, apiKey: e.target.value})} placeholder="sk-..." style={{width:"100%", padding:"12px", borderRadius:"var(--radius-md)", border:"1px solid var(--border-color)", background:"var(--bg-main)", color:"var(--text-primary)", outline:"none"}} />
+                  </div>
+                  <div style={{display:"flex", flexDirection:"column", gap:8}}>
+                    <label style={{fontSize:12, fontWeight:600, color:"var(--text-secondary)", textTransform:"uppercase"}}>Base URL</label>
+                    <input type="text" value={llmSettings.baseUrl} onChange={e=>setLlmSettings({...llmSettings, baseUrl: e.target.value})} placeholder="https://api.openai.com/v1" style={{width:"100%", padding:"12px", borderRadius:"var(--radius-md)", border:"1px solid var(--border-color)", background:"var(--bg-main)", color:"var(--text-primary)", outline:"none"}} />
+                  </div>
+                  <div style={{display:"flex", flexDirection:"column", gap:8}}>
+                    <label style={{fontSize:12, fontWeight:600, color:"var(--text-secondary)", textTransform:"uppercase"}}>Default Model</label>
+                    <input type="text" value={llmSettings.model} onChange={e=>setLlmSettings({...llmSettings, model: e.target.value})} placeholder="gpt-4o-mini" style={{width:"100%", padding:"12px", borderRadius:"var(--radius-md)", border:"1px solid var(--border-color)", background:"var(--bg-main)", color:"var(--text-primary)", outline:"none"}} />
+                  </div>
+                </>
+              )}
+
+              <button onClick={()=>setShowSettings(false)} style={{marginTop:12, padding:"12px", borderRadius:"var(--radius-md)", border:"none", background:"var(--text-primary)", color:"var(--bg-main)", fontWeight:600, cursor:"pointer"}}>Save Settings</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <style>{`
+        @keyframes slideIn {
+          from { transform: translateX(100%); }
+          to { transform: translateX(0); }
+        }
+      `}</style>
     </div>
   );
 }
