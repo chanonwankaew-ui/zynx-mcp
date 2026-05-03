@@ -4,13 +4,17 @@ import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { randomUUID } from "node:crypto";
 import type { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
+import cors from "cors";
 import { createZynxMcpServer } from "./mcpServer.js";
 import { mcpAllowedHosts, mcpHost, mcpHttpPort, mcpPath } from "./config.js";
+import { zynxCorsOptions } from "./corsConfig.js";
 
 const app = createMcpExpressApp({
   host: mcpHost,
   allowedHosts: mcpAllowedHosts
 });
+
+app.use(cors(zynxCorsOptions()));
 
 const transports = new Map<string, Transport>();
 
