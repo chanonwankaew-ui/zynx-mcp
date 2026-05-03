@@ -18,7 +18,9 @@
     "governance:run": "tsx scripts/run-governance.ts",
     "start": "node dist/index.js",
     "start:http": "node dist/http.js",
-    "start:backend": "node dist/backend.js"
+    "start:backend": "node dist/backend.js",
+    "dev:all": "concurrently -k -n backend,http,vite -c blue,magenta,green \"npm run dev:backend\" \"npm run dev:http\" \"npm run workflow:dev\"",
+    "all": "npm run build && npm audit --audit-level=moderate && npm run workflow:run && npm run governance:validate && npm --prefix apps/workflow-mapper run build && npm --prefix apps/workflow-mapper audit --audit-level=moderate"
   },
   "dependencies": {
     "@intercom/messenger-js-sdk": "^0.0.19",
@@ -34,6 +36,7 @@
     "@types/express": "5.0.6",
     "@types/node": "22.19.15",
     "@types/uuid": "^10.0.0",
+    "concurrently": "^9.2.1",
     "tsx": "4.21.0",
     "typescript": "5.9.3"
   }

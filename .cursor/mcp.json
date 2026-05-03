@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "Zynx-MCP": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["tsx", "src/stdio.ts"],
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "ZYNX_API_BASE_URL": "http://localhost:8790",
+        "ZYNX_DEFAULT_TENANT_ID": "dev",
+        "ZYNX_DEFAULT_USER_ID": "cursor-mcp"
+      },
+      "envFile": "${workspaceFolder}/.env"
+    }
+  }
+}

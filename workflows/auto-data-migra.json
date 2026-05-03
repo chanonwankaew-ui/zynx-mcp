@@ -1,0 +1,112 @@
+{
+  "workflow": {
+    "id": "auto-data-migra",
+    "name": "Auto_data-migra",
+    "color": "#9b5de5",
+    "created": "2026-05-02T15:24:36.264Z",
+    "agents": [
+      {
+        "step": 1,
+        "id": "orchestrator",
+        "name": "Zynx Orchestrator",
+        "role": "Master coordinator",
+        "category": "core",
+        "estimatedDuration": 2
+      },
+      {
+        "step": 2,
+        "id": "validator",
+        "name": "Schema Validator",
+        "role": "Zod / JSON Schema check",
+        "category": "data",
+        "estimatedDuration": 2
+      },
+      {
+        "step": 3,
+        "id": "reviewer",
+        "name": "Code Reviewer",
+        "role": "Quality & lint check",
+        "category": "worker",
+        "estimatedDuration": 3
+      },
+      {
+        "step": 4,
+        "id": "report-gen",
+        "name": "Report Generator",
+        "role": "PDF / Excel output",
+        "category": "output",
+        "estimatedDuration": 3
+      },
+      {
+        "step": 5,
+        "id": "logger",
+        "name": "Logger",
+        "role": "Audit trail",
+        "category": "output",
+        "estimatedDuration": 1
+      }
+    ],
+    "flow": {
+      "nodes": [
+        {
+          "id": "orchestrator",
+          "type": "agent",
+          "label": "Zynx Orchestrator",
+          "role": "Master coordinator",
+          "category": "core",
+          "estimatedDuration": 2
+        },
+        {
+          "id": "validator",
+          "type": "agent",
+          "label": "Schema Validator",
+          "role": "Zod / JSON Schema check",
+          "category": "data",
+          "estimatedDuration": 2
+        },
+        {
+          "id": "reviewer",
+          "type": "agent",
+          "label": "Code Reviewer",
+          "role": "Quality & lint check",
+          "category": "worker",
+          "estimatedDuration": 3
+        },
+        {
+          "id": "report-gen",
+          "type": "agent",
+          "label": "Report Generator",
+          "role": "PDF / Excel output",
+          "category": "output",
+          "estimatedDuration": 3
+        },
+        {
+          "id": "logger",
+          "type": "agent",
+          "label": "Logger",
+          "role": "Audit trail",
+          "category": "output",
+          "estimatedDuration": 1
+        }
+      ],
+      "edges": [
+        {
+          "source": "orchestrator",
+          "target": "validator"
+        },
+        {
+          "source": "validator",
+          "target": "reviewer"
+        },
+        {
+          "source": "reviewer",
+          "target": "report-gen"
+        },
+        {
+          "source": "report-gen",
+          "target": "logger"
+        }
+      ]
+    }
+  }
+}

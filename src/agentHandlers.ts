@@ -234,7 +234,7 @@ async function taskPlannerHandler(input: Record<string, unknown>, ctx: AgentInvo
       agent_id: "task-planner",
       tenant_id: ctx.tenantId,
       trace_id: traceId,
-      has_file_context: !!fileContext
+      has_file_context: String(!!fileContext)
     },
     runtime: { ...ctx.providerConfig, traceId }
   });
@@ -299,7 +299,7 @@ async function deejaHandler(input: Record<string, unknown>, ctx: AgentInvocation
       tenant_id: ctx.tenantId,
       language: hasThai ? "th" : "en",
       trace_id: traceId,
-      has_file_context: !!fileContext
+      has_file_context: String(!!fileContext)
     },
     runtime: { ...ctx.providerConfig, traceId }
   });

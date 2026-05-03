@@ -308,6 +308,36 @@ export default function App() {
   const [buildColor, setBuildColor] = useState("#9b5de5");
   const [activeAgentId, setActiveAgentId] = useState(null);
 
+  // History State
+  const [history, setHistory] = useState([]);
+  const [isTestingConn, setIsTestingConn] = useState(false);
+  const [testResult, setTestResult] = useState(null);
+
+  const fetchHistory = async () => {
+    try {
+      const res = await fetch(`${ZYNX_BACKEND_URL}/workflow/runs`);
+      const data = await res.json();
+      if (data.runs) {
+        // De-duplicate by workflowName, keeping only the first (most recent) occurrence
+        const uniqueRuns = [];
+        const seenNames = new Set();
+        for (const run of data.runs) {
+          if (!seenNames.has(run.workflowName)) {
+            seenNames.add(run.workflowName);
+            uniqueRuns.push(run);
+          }
+        }
+        setHistory(uniqueRuns.slice(0, 8));
+      }
+    } catch (err) {
+      console.error("Failed to fetch history", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchHistory();
+  }, []);
+
   // Skill Editor State
   const [editingSkillAgentId, setEditingSkillAgentId] = useState(null);
   const [activePane, setActivePane] = useState('details'); // 'details' | 'tools-main' | 'add-mcp' | 'add-vertex'
@@ -662,12 +692,17 @@ ${skillForm.instructions}`;
            </button>
         </div>
         <div style={{flex:1, overflowY:"auto", padding:"0 16px"}}>
-           <div style={{fontSize:11, fontWeight:600, color:"var(--text-tertiary)", marginTop:12, marginBottom:12}}>Recent</div>
+           <div style={{fontSize:11, fontWeight:600, color:"var(--text-tertiary)", marginTop:12, marginBottom:12}}>Recent Workflow Runs</div>
            <div style={{display:"flex", flexDirection:"column", gap:2}}>
-             {["Zynx API deployment", "Data validation pipeline", "Setup automated reports"].map((h,i) => (
-                <div key={i} style={{fontSize:13, color:"var(--text-secondary)", padding:"8px 10px", borderRadius:"var(--radius-sm)", cursor:"pointer", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis"}} 
-                     onMouseOver={e=>e.currentTarget.style.background="var(--bg-panel)"} onMouseOut={e=>e.currentTarget.style.background="transparent"}>{h}</div>
-             ))}
+             {history.length > 0 ? history.map((run, i) => (
+                <div key={i} onClick={() => setInput(`Run workflow ${run.workflowName}`)} style={{fontSize:13, color:"var(--text-secondary)", padding:"8px 10px", borderRadius:"var(--radius-sm)", cursor:"pointer", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis", display:"flex", alignItems:"center", gap:8}} 
+                     onMouseOver={e=>e.currentTarget.style.background="var(--bg-panel)"} onMouseOut={e=>e.currentTarget.style.background="transparent"}>
+                  <div style={{width:6, height:6, borderRadius:"50%", background: run.status === "Failed" ? "#ef4444" : "var(--accent-teal)"}} />
+                  {run.workflowName}
+                </div>
+             )) : (
+               <div style={{fontSize:12, color:"var(--text-tertiary)", padding:"8px 10px"}}>No recent runs.</div>
+             )}
            </div>
         </div>
         <div style={{padding:"16px", borderTop:"1px solid var(--border-color)", display:"flex", alignItems:"center", gap:10}}>
@@ -1092,12 +1127,44 @@ ${skillForm.instructions}`;
                           <option value="Basic Auth">Basic Auth</option>
                         </select>
                       </div>
+                      
+                      {testResult && (
+                        <div style={{padding:"8px 12px", borderRadius:4, background:testResult.ok?"rgba(74,222,128,0.1)":"rgba(248,113,113,0.1)", border:`1px solid ${testResult.ok?"var(--accent)":"#f87171"}`, fontSize:12, color:testResult.ok?"var(--accent)":"#f87171"}}>
+                          {testResult.message} {testResult.latencyMs ? `(${testResult.latencyMs}ms)` : ""}
+                        </div>
+                      )}
+
                       <div style={{display:"flex", gap:16, marginTop:8}}>
                         <button onClick={()=>{
-                          if(mcpForm.name) setSkillForm({...skillForm, tools: [...skillForm.tools, `MCP: ${mcpForm.name}`]});
+                          if(mcpForm.name) {
+                            setSkillForm({...skillForm, tools: [...skillForm.tools, `MCP: ${mcpForm.name}`]});
+                            setTestResult(null);
+                          }
                           setActivePane('tools-main');
                         }} style={{padding:"8px 24px", borderRadius:"24px", border:"none", background:"#a8c7fa", color:"#0842a0", fontWeight:500, fontSize:13, cursor:"pointer"}}>Add</button>
-                        <button onClick={()=>setActivePane('tools-main')} style={{padding:"8px 16px", background:"transparent", border:"none", color:"#a8c7fa", fontWeight:500, fontSize:13, cursor:"pointer"}}>Cancel</button>
+                        
+                        <button 
+                          onClick={async () => {
+                            setIsTestingConn(true);
+                            try {
+                              const res = await fetch(`${ZYNX_BACKEND_URL}/tools/test`, {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({ type: "mcp", config: mcpForm })
+                              });
+                              const data = await res.json();
+                              setTestResult(data);
+                            } finally {
+                              setIsTestingConn(false);
+                            }
+                          }}
+                          disabled={isTestingConn || !mcpForm.url}
+                          style={{padding:"8px 16px", background:"transparent", border:"1px solid var(--border-color)", color:"var(--text-primary)", borderRadius:"24px", fontSize:13, cursor: (isTestingConn || !mcpForm.url) ? "not-allowed" : "pointer"}}
+                        >
+                          {isTestingConn ? "Testing..." : "Test Connection"}
+                        </button>
+
+                        <button onClick={()=>{setActivePane('tools-main'); setTestResult(null);}} style={{padding:"8px 16px", background:"transparent", border:"none", color:"#a8c7fa", fontWeight:500, fontSize:13, cursor:"pointer"}}>Cancel</button>
                       </div>
                     </div>
                   </>
@@ -1109,7 +1176,7 @@ ${skillForm.instructions}`;
                     <div style={{padding:"16px 20px", borderBottom:"1px solid var(--border-color)", display:"flex", alignItems:"center", background:"var(--bg-main)", gap:16}}>
                       <button onClick={()=>setActivePane('tools-main')} style={{background:"transparent", border:"none", color:"var(--text-primary)", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center"}}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
                       <div style={{fontWeight:500, fontSize:15, color:"var(--text-primary)", flex:1}}>Tools</div>
-                      <button onClick={()=>setEditingSkillAgentId(null)} style={{background:"transparent", border:"none", color:"var(--text-secondary)", cursor:"pointer"}}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+                      <button onClick={()=>{setEditingSkillAgentId(null); setTestResult(null);}} style={{background:"transparent", border:"none", color:"var(--text-secondary)", cursor:"pointer"}}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
                     </div>
                     <div style={{flex:1, overflowY:"auto", padding:"20px", display:"flex", flexDirection:"column", gap:16}}>
                       <div style={{display:"flex", flexDirection:"column", gap:6}}>
@@ -1141,12 +1208,43 @@ ${skillForm.instructions}`;
                          <div style={{fontSize:12, color:"var(--text-primary)", lineHeight:1.5}}>Grant permissions to connect to a Vertex AI Search datastore using the instructions <a href="#" style={{color:"#a8c7fa"}}>here.</a></div>
                       </div>
 
+                      {testResult && (
+                        <div style={{padding:"8px 12px", borderRadius:4, background:testResult.ok?"rgba(74,222,128,0.1)":"rgba(248,113,113,0.1)", border:`1px solid ${testResult.ok?"var(--accent)":"#f87171"}`, fontSize:12, color:testResult.ok?"var(--accent)":"#f87171"}}>
+                          {testResult.message}
+                        </div>
+                      )}
+
                       <div style={{display:"flex", gap:16, marginTop:8}}>
                         <button onClick={()=>{
-                          if(vertexForm.dataStoreId) setSkillForm({...skillForm, tools: [...skillForm.tools, `Vertex AI: ${vertexForm.dataStoreId}`]});
+                          if(vertexForm.dataStoreId) {
+                            setSkillForm({...skillForm, tools: [...skillForm.tools, `Vertex AI: ${vertexForm.dataStoreId}`]});
+                            setTestResult(null);
+                          }
                           setActivePane('tools-main');
                         }} style={{padding:"8px 24px", borderRadius:"24px", border:"none", background:"#a8c7fa", color:"#0842a0", fontWeight:500, fontSize:13, cursor:"pointer"}}>Add</button>
-                        <button onClick={()=>setActivePane('tools-main')} style={{padding:"8px 16px", background:"transparent", border:"none", color:"#a8c7fa", fontWeight:500, fontSize:13, cursor:"pointer"}}>Cancel</button>
+                        
+                        <button 
+                          onClick={async () => {
+                            setIsTestingConn(true);
+                            try {
+                              const res = await fetch(`${ZYNX_BACKEND_URL}/tools/test`, {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({ type: "vertex", config: vertexForm })
+                              });
+                              const data = await res.json();
+                              setTestResult(data);
+                            } finally {
+                              setIsTestingConn(false);
+                            }
+                          }}
+                          disabled={isTestingConn || !vertexForm.projectId || !vertexForm.dataStoreId}
+                          style={{padding:"8px 16px", background:"transparent", border:"1px solid var(--border-color)", color:"var(--text-primary)", borderRadius:"24px", fontSize:13, cursor: (isTestingConn || !vertexForm.projectId) ? "not-allowed" : "pointer"}}
+                        >
+                          {isTestingConn ? "Testing..." : "Test Connection"}
+                        </button>
+
+                        <button onClick={()=>{setActivePane('tools-main'); setTestResult(null);}} style={{padding:"8px 16px", background:"transparent", border:"none", color:"#a8c7fa", fontWeight:500, fontSize:13, cursor:"pointer"}}>Cancel</button>
                       </div>
                     </div>
                   </>

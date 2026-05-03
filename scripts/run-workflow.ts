@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { AGENT_REGISTRY, findAgent } from "../src/agentRegistry.js";
