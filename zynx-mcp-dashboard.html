@@ -411,7 +411,8 @@ const AGENTS = [
 ];
 
 let CONFIG = {
-  baseUrl:  localStorage.getItem('zynx_base_url')  || 'http://localhost:8790',
+  baseUrl:  localStorage.getItem('zynx_base_url')  || 
+            (window.location.hostname === 'localhost' ? 'http://localhost:8790' : window.location.origin),
   interval: parseInt(localStorage.getItem('zynx_interval') || '30'),
   auth:     localStorage.getItem('zynx_auth')      || '',
 };

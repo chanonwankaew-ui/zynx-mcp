@@ -68,28 +68,60 @@ async function parseJsonResponse(res: Response) {
   return body;
 }
 
+/**
+ * ARQ (Automatic Repeat Request) Implementation
+ * Retries a function with a fixed delay between attempts.
+ */
+async function withRetry<T>(
+  fn: () => Promise<T>,
+  maxAttempts = 3,
+  delayMs = 1000
+): Promise<T> {
+  let lastError: Error | undefined;
+  
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      lastError = err as Error;
+      if (attempt < maxAttempts) {
+        console.warn(`[ARQ] Attempt ${attempt} failed, retrying in ${delayMs}ms...`);
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
+      }
+    }
+  }
+  
+  throw lastError;
+}
+
 export async function invokeAgent(input: InvokeAgentInput) {
-  const { agentId, ...payload } = input;
-  const res = await fetch(`${baseUrl()}/agents/${encodeURIComponent(agentId)}/invoke`, {
-    method: "POST",
-    headers: serviceHeaders(),
-    body: JSON.stringify(payload)
+  return withRetry(async () => {
+    const { agentId, ...payload } = input;
+    const res = await fetch(`${baseUrl()}/agents/${encodeURIComponent(agentId)}/invoke`, {
+      method: "POST",
+      headers: serviceHeaders(),
+      body: JSON.stringify(payload)
+    });
+    return parseJsonResponse(res);
   });
-  return parseJsonResponse(res);
 }
 
 export async function getAgentHealth(input: GetAgentHealthInput) {
-  const res = await fetch(`${baseUrl()}/agents/${encodeURIComponent(input.agentId)}/health`, {
-    method: "GET",
-    headers: serviceHeaders()
+  return withRetry(async () => {
+    const res = await fetch(`${baseUrl()}/agents/${encodeURIComponent(input.agentId)}/health`, {
+      method: "GET",
+      headers: serviceHeaders()
+    });
+    return parseJsonResponse(res);
   });
-  return parseJsonResponse(res);
 }
 
 export async function listAgents(): Promise<unknown> {
-  const res = await fetch(`${baseUrl()}/agents`, {
-    method: "GET",
-    headers: serviceHeaders()
+  return withRetry(async () => {
+    const res = await fetch(`${baseUrl()}/agents`, {
+      method: "GET",
+      headers: serviceHeaders()
+    });
+    return parseJsonResponse(res);
   });
-  return parseJsonResponse(res);
 }

@@ -1,11 +1,8 @@
 node_modules
 dist
+.build
 .git
-.github
-.vscode
-scratch
-.env
-.codex
-macos
-reports
-apps
+.DS_Store
+*.log
+google-cloud-sdk
+oracleJdk-26.jdk
