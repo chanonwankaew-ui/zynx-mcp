@@ -1,0 +1,481 @@
+{
+  "workflowRunId": "zynx-developer-mode-build-2026-05-12T17:31:01.656Z",
+  "workflowId": "zynx-developer-mode-build",
+  "workflowName": "Zynx Developer Mode Build",
+  "goal": "Convert Zynx ecosystem concepts into repo-backed implementation slices, validate the workflow route map, and produce a human-reviewable build report.",
+  "input": "dry-run",
+  "runMode": "dry-run",
+  "runState": "CompletedDryRun",
+  "executedBy": "scripts/run-workflow.ts",
+  "createdAt": "2026-05-12T17:31:01.656Z",
+  "durationUnits": 21,
+  "contextPassing": "sequential",
+  "flowSource": "generated-from-agents",
+  "routeMap": [
+    {
+      "agentId": "orchestrator",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/orchestrator/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "task-planner",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/task-planner/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "router",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/router/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "memory",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/memory/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "scheduler",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/scheduler/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "auth",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/auth/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "deeja",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/deeja/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "dashboard-ui",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/dashboard-ui/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "form-builder",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/form-builder/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "chat-ui",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/chat-ui/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "frontend-designer",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/frontend-designer/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "data-ingest",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/data-ingest/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "validator",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/validator/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "transformer",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/transformer/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "vector-store",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/vector-store/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "db-agent",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/db-agent/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "cache",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/cache/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "workflow-mapper",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/workflow-mapper/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "code-gen",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/code-gen/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "doc-writer",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/doc-writer/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "reviewer",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/reviewer/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "test-gen",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/test-gen/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "refactor",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/refactor/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "api-builder",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/api-builder/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "prompt-eng",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/prompt-eng/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "rag-agent",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/rag-agent/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "sales-bot",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/sales-bot/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "hr-agent",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/hr-agent/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "finance-agent",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/finance-agent/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "ops-agent",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/ops-agent/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "marketing",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/marketing/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "support-bot",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/support-bot/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "touchscreen",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/touchscreen/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "notifier",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/notifier/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "logger",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/logger/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "report-gen",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/report-gen/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "webhook",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/webhook/invoke",
+      "status": "published"
+    }
+  ],
+  "flow": {
+    "nodes": [
+      {
+        "id": "orchestrator",
+        "type": "agent",
+        "label": "Zynx Orchestrator",
+        "role": "Coordinate developer-mode implementation from concept to repo-backed plan",
+        "category": "core",
+        "estimatedDuration": 2
+      },
+      {
+        "id": "task-planner",
+        "type": "agent",
+        "label": "Task Planner",
+        "role": "Break the Zynx concept stack into buildable implementation slices",
+        "category": "core",
+        "estimatedDuration": 3
+      },
+      {
+        "id": "validator",
+        "type": "agent",
+        "label": "Schema Validator",
+        "role": "Validate workflow JSON, route mappings, and artifact references",
+        "category": "data",
+        "estimatedDuration": 2
+      },
+      {
+        "id": "code-gen",
+        "type": "agent",
+        "label": "Code Generator",
+        "role": "Identify the smallest next source change required to replace backend stubs",
+        "category": "worker",
+        "estimatedDuration": 3
+      },
+      {
+        "id": "reviewer",
+        "type": "agent",
+        "label": "Code Reviewer",
+        "role": "Review implementation risk, security boundaries, and overclaiming risk",
+        "category": "worker",
+        "estimatedDuration": 3
+      },
+      {
+        "id": "test-gen",
+        "type": "agent",
+        "label": "Test Generator",
+        "role": "Define verification commands for build, workflow dry-run, and governance checks",
+        "category": "worker",
+        "estimatedDuration": 2
+      },
+      {
+        "id": "doc-writer",
+        "type": "agent",
+        "label": "Doc Writer",
+        "role": "Write developer-facing plan, pitch deck, and launch-safe positioning",
+        "category": "worker",
+        "estimatedDuration": 3
+      },
+      {
+        "id": "report-gen",
+        "type": "agent",
+        "label": "Report Generator",
+        "role": "Generate a run report that separates Done, In Progress, and Planned capabilities",
+        "category": "output",
+        "estimatedDuration": 2
+      },
+      {
+        "id": "logger",
+        "type": "agent",
+        "label": "Logger",
+        "role": "Append audit-friendly notes and preserve source-of-truth boundaries",
+        "category": "output",
+        "estimatedDuration": 1
+      }
+    ],
+    "edges": [
+      {
+        "source": "orchestrator",
+        "target": "task-planner"
+      },
+      {
+        "source": "task-planner",
+        "target": "validator"
+      },
+      {
+        "source": "validator",
+        "target": "code-gen"
+      },
+      {
+        "source": "code-gen",
+        "target": "reviewer"
+      },
+      {
+        "source": "reviewer",
+        "target": "test-gen"
+      },
+      {
+        "source": "test-gen",
+        "target": "doc-writer"
+      },
+      {
+        "source": "doc-writer",
+        "target": "report-gen"
+      },
+      {
+        "source": "report-gen",
+        "target": "logger"
+      }
+    ]
+  },
+  "steps": [
+    {
+      "step": 1,
+      "agentId": "orchestrator",
+      "agentName": "Zynx Orchestrator",
+      "role": "Coordinate developer-mode implementation from concept to repo-backed plan",
+      "category": "core",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/orchestrator/invoke",
+      "plannedStart": 0,
+      "plannedEnd": 2,
+      "state": "Mapped",
+      "executed": false,
+      "output": "Dry-run mapped Zynx Orchestrator to invoke_agent -> /agents/orchestrator/invoke"
+    },
+    {
+      "step": 2,
+      "agentId": "task-planner",
+      "agentName": "Task Planner",
+      "role": "Break the Zynx concept stack into buildable implementation slices",
+      "category": "core",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/task-planner/invoke",
+      "plannedStart": 2,
+      "plannedEnd": 5,
+      "state": "Mapped",
+      "executed": false,
+      "output": "Dry-run mapped Task Planner to invoke_agent -> /agents/task-planner/invoke"
+    },
+    {
+      "step": 3,
+      "agentId": "validator",
+      "agentName": "Schema Validator",
+      "role": "Validate workflow JSON, route mappings, and artifact references",
+      "category": "data",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/validator/invoke",
+      "plannedStart": 5,
+      "plannedEnd": 7,
+      "state": "Mapped",
+      "executed": false,
+      "output": "Dry-run mapped Schema Validator to invoke_agent -> /agents/validator/invoke"
+    },
+    {
+      "step": 4,
+      "agentId": "code-gen",
+      "agentName": "Code Generator",
+      "role": "Identify the smallest next source change required to replace backend stubs",
+      "category": "worker",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/code-gen/invoke",
+      "plannedStart": 7,
+      "plannedEnd": 10,
+      "state": "Mapped",
+      "executed": false,
+      "output": "Dry-run mapped Code Generator to invoke_agent -> /agents/code-gen/invoke"
+    },
+    {
+      "step": 5,
+      "agentId": "reviewer",
+      "agentName": "Code Reviewer",
+      "role": "Review implementation risk, security boundaries, and overclaiming risk",
+      "category": "worker",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/reviewer/invoke",
+      "plannedStart": 10,
+      "plannedEnd": 13,
+      "state": "Mapped",
+      "executed": false,
+      "output": "Dry-run mapped Code Reviewer to invoke_agent -> /agents/reviewer/invoke"
+    },
+    {
+      "step": 6,
+      "agentId": "test-gen",
+      "agentName": "Test Generator",
+      "role": "Define verification commands for build, workflow dry-run, and governance checks",
+      "category": "worker",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/test-gen/invoke",
+      "plannedStart": 13,
+      "plannedEnd": 15,
+      "state": "Mapped",
+      "executed": false,
+      "output": "Dry-run mapped Test Generator to invoke_agent -> /agents/test-gen/invoke"
+    },
+    {
+      "step": 7,
+      "agentId": "doc-writer",
+      "agentName": "Doc Writer",
+      "role": "Write developer-facing plan, pitch deck, and launch-safe positioning",
+      "category": "worker",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/doc-writer/invoke",
+      "plannedStart": 15,
+      "plannedEnd": 18,
+      "state": "Mapped",
+      "executed": false,
+      "output": "Dry-run mapped Doc Writer to invoke_agent -> /agents/doc-writer/invoke"
+    },
+    {
+      "step": 8,
+      "agentId": "report-gen",
+      "agentName": "Report Generator",
+      "role": "Generate a run report that separates Done, In Progress, and Planned capabilities",
+      "category": "output",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/report-gen/invoke",
+      "plannedStart": 18,
+      "plannedEnd": 20,
+      "state": "Mapped",
+      "executed": false,
+      "output": "Dry-run mapped Report Generator to invoke_agent -> /agents/report-gen/invoke"
+    },
+    {
+      "step": 9,
+      "agentId": "logger",
+      "agentName": "Logger",
+      "role": "Append audit-friendly notes and preserve source-of-truth boundaries",
+      "category": "output",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/logger/invoke",
+      "plannedStart": 20,
+      "plannedEnd": 21,
+      "state": "Mapped",
+      "executed": false,
+      "output": "Dry-run mapped Logger to invoke_agent -> /agents/logger/invoke"
+    }
+  ],
+  "nextActions": [
+    "Review this dry-run route map before running with --execute.",
+    "Map specialized agent behavior behind each backend route.",
+    "Promote approved workflows into scheduled governance or production runbooks."
+  ]
+}
