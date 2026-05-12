@@ -13,8 +13,21 @@ import {
 const defaultWorkflowPath = "workflows/nightly-governance-validation.json";
 const args = process.argv.slice(2);
 const execute = args.includes("--execute");
-const workflowPath = args.find(arg => !arg.startsWith("--")) ?? defaultWorkflowPath;
-const input = args.find((arg, index) => index > args.indexOf(workflowPath) && !arg.startsWith("--")) ?? (execute ? "execute" : "dry-run");
+
+// --workflow <id> resolves workflows/<id>.json; positional path still works as fallback
+const workflowFlagIdx = args.findIndex(a => a === "--workflow" || a === "-w");
+const workflowId = workflowFlagIdx !== -1 ? args[workflowFlagIdx + 1] : undefined;
+// Exclude flags and the value consumed by --workflow flag; keep first remaining non-flag arg
+const positionalPath = args.find((arg, idx) => {
+  if (arg.startsWith("--") || arg.startsWith("-")) return false;
+  if (workflowFlagIdx !== -1 && idx === workflowFlagIdx + 1) return false; // value after --workflow
+  return true;
+});
+const workflowPath = workflowId
+  ? `workflows/${workflowId}.json`
+  : positionalPath ?? defaultWorkflowPath;
+
+const input = (execute ? "execute" : "dry-run");
 const backendBaseUrl = (process.env.ZYNX_API_BASE_URL ?? "http://localhost:8787").replace(/\/$/, "");
 
 function serviceHeaders() {

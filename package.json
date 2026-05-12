@@ -12,6 +12,8 @@
     "workflow:dev": "npm --prefix apps/workflow-mapper run dev",
     "workflow:build": "npm --prefix apps/workflow-mapper run build",
     "workflow:run": "tsx scripts/run-workflow.ts",
+    "workflow:list": "bash scripts/codex-run-workflow.sh --list",
+    "codex:workflow": "bash scripts/codex-run-workflow.sh",
     "blueprint:run": "scripts/build-blueprint-explorer.sh run",
     "blueprint:verify": "scripts/build-blueprint-explorer.sh --verify",
     "governance:validate": "tsx scripts/validate-governance.ts",
