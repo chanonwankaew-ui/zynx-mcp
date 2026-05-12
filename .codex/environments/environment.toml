@@ -1,0 +1,54 @@
+# Codex CLI environment — Zynx MCP
+# Docs: https://github.com/openai/codex
+version = 1
+name    = "zynx-mcp"
+
+[setup]
+# Restore deps if node_modules is missing (sandboxed runs)
+script = """
+if [ ! -d node_modules ]; then
+  npm install --prefer-offline --loglevel=error
+fi
+"""
+
+# ── Actions (shown in Codex TUI action bar) ─────────────────────────────────
+
+[[actions]]
+name    = "Build + Audit"
+icon    = "build"
+command = "npm run build && npm audit --audit-level=moderate"
+
+[[actions]]
+name    = "Dry-Run: Governance"
+icon    = "run"
+command = "bash scripts/codex-run-workflow.sh --workflow nightly-governance-validation"
+
+[[actions]]
+name    = "Dry-Run: Developer Build"
+icon    = "run"
+command = "bash scripts/codex-run-workflow.sh --workflow zynx-developer-mode-build"
+
+[[actions]]
+name    = "Execute: Governance"
+icon    = "deploy"
+command = "bash scripts/codex-run-workflow.sh --workflow nightly-governance-validation --execute"
+
+[[actions]]
+name    = "Execute: Developer Build"
+icon    = "deploy"
+command = "bash scripts/codex-run-workflow.sh --workflow zynx-developer-mode-build --execute"
+
+[[actions]]
+name    = "List Workflows"
+icon    = "search"
+command = "bash scripts/codex-run-workflow.sh --list"
+
+[[actions]]
+name    = "Dev Backend"
+icon    = "server"
+command = "npm run dev:backend"
+
+[[actions]]
+name    = "Governance Validate"
+icon    = "check"
+command = "npm run governance:validate"

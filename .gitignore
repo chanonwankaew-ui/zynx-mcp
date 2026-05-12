@@ -17,7 +17,6 @@ build/
 **/obj/
 
 # Local tooling
-.codex/
 .vscode/
 CLAUDE.local.md
 
