@@ -27,6 +27,7 @@
   "dependencies": {
     "@intercom/messenger-js-sdk": "^0.0.19",
     "@modelcontextprotocol/sdk": "1.29.0",
+    "axios": "^1.16.1",
     "cors": "2.8.6",
     "dotenv": "16.6.1",
     "express": "^4.22.2",

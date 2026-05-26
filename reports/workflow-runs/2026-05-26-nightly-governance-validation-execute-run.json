@@ -1,0 +1,710 @@
+{
+  "workflowRunId": "nightly-governance-validation-2026-05-26T19:38:42.064Z",
+  "workflowId": "nightly-governance-validation",
+  "workflowName": "Nightly Governance Validation",
+  "goal": "Review repository governance state, classify deltas, analyze duplicates, and publish a human-reviewable daily report.",
+  "input": "execute",
+  "runMode": "execute",
+  "runState": "Completed",
+  "executedBy": "scripts/run-workflow.ts",
+  "createdAt": "2026-05-26T19:38:42.064Z",
+  "durationUnits": 23,
+  "contextPassing": "sequential",
+  "flowSource": "workflow.flow",
+  "routeMap": [
+    {
+      "agentId": "orchestrator",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/orchestrator/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "task-planner",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/task-planner/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "router",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/router/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "memory",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/memory/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "scheduler",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/scheduler/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "auth",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/auth/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "deeja",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/deeja/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "dashboard-ui",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/dashboard-ui/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "form-builder",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/form-builder/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "chat-ui",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/chat-ui/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "frontend-designer",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/frontend-designer/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "data-ingest",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/data-ingest/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "validator",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/validator/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "transformer",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/transformer/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "vector-store",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/vector-store/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "db-agent",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/db-agent/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "cache",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/cache/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "workflow-mapper",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/workflow-mapper/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "code-gen",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/code-gen/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "doc-writer",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/doc-writer/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "reviewer",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/reviewer/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "test-gen",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/test-gen/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "refactor",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/refactor/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "api-builder",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/api-builder/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "prompt-eng",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/prompt-eng/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "rag-agent",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/rag-agent/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "sales-bot",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/sales-bot/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "hr-agent",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/hr-agent/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "finance-agent",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/finance-agent/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "ops-agent",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/ops-agent/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "marketing",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/marketing/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "support-bot",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/support-bot/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "touchscreen",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/touchscreen/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "notifier",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/notifier/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "logger",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/logger/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "report-gen",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/report-gen/invoke",
+      "status": "published"
+    },
+    {
+      "agentId": "webhook",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/webhook/invoke",
+      "status": "published"
+    }
+  ],
+  "flow": {
+    "nodes": [
+      {
+        "id": "orchestrator",
+        "type": "agent",
+        "label": "Zynx Orchestrator",
+        "role": "Master coordinator",
+        "category": "core",
+        "estimatedDuration": 2
+      },
+      {
+        "id": "data-ingest",
+        "type": "agent",
+        "label": "Data Ingestion",
+        "role": "Load manifest, repository visibility, and governance files",
+        "category": "data",
+        "estimatedDuration": 5
+      },
+      {
+        "id": "validator",
+        "type": "agent",
+        "label": "Schema Validator",
+        "role": "Validate required files, enums, and report structure",
+        "category": "data",
+        "estimatedDuration": 2
+      },
+      {
+        "id": "transformer",
+        "type": "agent",
+        "label": "Data Transformer",
+        "role": "Normalize repository deltas and proposed manifest rows",
+        "category": "data",
+        "estimatedDuration": 3
+      },
+      {
+        "id": "db-agent",
+        "type": "agent",
+        "label": "DB Agent",
+        "role": "Persist reviewed governance state when approved",
+        "category": "data",
+        "estimatedDuration": 3
+      },
+      {
+        "id": "reviewer",
+        "type": "agent",
+        "label": "Code Reviewer",
+        "role": "Check evidence quality and non-destructive safety gates",
+        "category": "worker",
+        "estimatedDuration": 3
+      },
+      {
+        "id": "report-gen",
+        "type": "agent",
+        "label": "Report Generator",
+        "role": "Create daily governance report from template",
+        "category": "output",
+        "estimatedDuration": 3
+      },
+      {
+        "id": "notifier",
+        "type": "agent",
+        "label": "Notifier",
+        "role": "Notify human reviewer when approval is required",
+        "category": "output",
+        "estimatedDuration": 1
+      },
+      {
+        "id": "logger",
+        "type": "agent",
+        "label": "Logger",
+        "role": "Append audit trail and decision log entries",
+        "category": "output",
+        "estimatedDuration": 1
+      }
+    ],
+    "edges": [
+      {
+        "source": "orchestrator",
+        "target": "data-ingest"
+      },
+      {
+        "source": "data-ingest",
+        "target": "validator"
+      },
+      {
+        "source": "validator",
+        "target": "transformer"
+      },
+      {
+        "source": "transformer",
+        "target": "db-agent"
+      },
+      {
+        "source": "db-agent",
+        "target": "reviewer"
+      },
+      {
+        "source": "reviewer",
+        "target": "report-gen"
+      },
+      {
+        "source": "report-gen",
+        "target": "notifier"
+      },
+      {
+        "source": "notifier",
+        "target": "logger"
+      }
+    ]
+  },
+  "steps": [
+    {
+      "step": 1,
+      "agentId": "orchestrator",
+      "agentName": "Zynx Orchestrator",
+      "role": "Master coordinator",
+      "category": "core",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/orchestrator/invoke",
+      "plannedStart": 0,
+      "plannedEnd": 2,
+      "state": "Completed",
+      "executed": true,
+      "output": {
+        "agentId": "orchestrator",
+        "output": {
+          "message": "Orchestrating workflow for goal: execute. Routing to task-planner for decomposition.",
+          "coordinationPlan": {
+            "goal": "execute",
+            "preferredAgents": [
+              "task-planner"
+            ],
+            "nextAgent": "task-planner",
+            "tenantId": "dev"
+          },
+          "nextActions": [
+            "Route to task-planner to decompose the goal into workflow steps.",
+            "Pass coordinationPlan.goal forward as workflow context."
+          ],
+          "providerExecution": {
+            "provider": "local",
+            "status": "disabled",
+            "modelUsed": "local-deterministic-handler",
+            "tokensUsed": 0,
+            "usedRemoteProvider": false
+          },
+          "agentId": "orchestrator",
+          "handledBy": "specialized-handler"
+        },
+        "meta": {
+          "durationMs": 1,
+          "tokensUsed": 0,
+          "modelUsed": "local-deterministic-handler"
+        }
+      }
+    },
+    {
+      "step": 2,
+      "agentId": "data-ingest",
+      "agentName": "Data Ingestion",
+      "role": "Load manifest, repository visibility, and governance files",
+      "category": "data",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/data-ingest/invoke",
+      "plannedStart": 2,
+      "plannedEnd": 7,
+      "state": "Completed",
+      "executed": true,
+      "output": {
+        "agentId": "data-ingest",
+        "output": {
+          "message": "Data ingestion: received payload for goal 'execute'. Fields extracted and staged for downstream agents.",
+          "ingestResult": {
+            "goal": "execute",
+            "recordsIngested": 1,
+            "dataShape": [
+              "workflowInput",
+              "context",
+              "agent"
+            ],
+            "staged": true
+          },
+          "nextActions": [
+            "Pass ingestResult to validator for schema checks.",
+            "Then route to transformer for normalization."
+          ],
+          "providerExecution": {
+            "provider": "local",
+            "status": "disabled",
+            "modelUsed": "local-deterministic-handler",
+            "tokensUsed": 0,
+            "usedRemoteProvider": false
+          },
+          "agentId": "data-ingest",
+          "handledBy": "specialized-handler"
+        },
+        "meta": {
+          "durationMs": 0,
+          "tokensUsed": 0,
+          "modelUsed": "local-deterministic-handler"
+        }
+      }
+    },
+    {
+      "step": 3,
+      "agentId": "validator",
+      "agentName": "Schema Validator",
+      "role": "Validate required files, enums, and report structure",
+      "category": "data",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/validator/invoke",
+      "plannedStart": 7,
+      "plannedEnd": 9,
+      "state": "Completed",
+      "executed": true,
+      "output": {
+        "agentId": "validator",
+        "output": {
+          "message": "Validation passed with warnings.",
+          "valid": true,
+          "severity": "warn",
+          "checks": [
+            {
+              "name": "workflow.present",
+              "status": "warn",
+              "message": "No workflow object supplied; validating invocation context only."
+            },
+            {
+              "name": "invocation.agentRoute",
+              "status": "pass",
+              "message": "validator is registered at /agents/validator/invoke."
+            },
+            {
+              "name": "context.available",
+              "status": "pass",
+              "message": "Context contains 3 entries."
+            }
+          ],
+          "routeMapSize": 37,
+          "agentId": "validator",
+          "handledBy": "specialized-handler"
+        },
+        "meta": {
+          "durationMs": 0,
+          "tokensUsed": 0,
+          "modelUsed": "local-deterministic-handler"
+        }
+      }
+    },
+    {
+      "step": 4,
+      "agentId": "transformer",
+      "agentName": "Data Transformer",
+      "role": "Normalize repository deltas and proposed manifest rows",
+      "category": "data",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/transformer/invoke",
+      "plannedStart": 9,
+      "plannedEnd": 12,
+      "state": "Completed",
+      "executed": true,
+      "output": {
+        "agentId": "transformer",
+        "output": {
+          "message": "Fallback output because LLM provider is disabled.",
+          "handlerType": "skill-driven-llm",
+          "providerExecution": {
+            "modelUsed": "local-deterministic-handler",
+            "tokensUsed": 0
+          },
+          "agentId": "transformer",
+          "handledBy": "fallback-handler"
+        },
+        "meta": {
+          "durationMs": 0,
+          "tokensUsed": 0,
+          "modelUsed": "local-deterministic-handler"
+        }
+      }
+    },
+    {
+      "step": 5,
+      "agentId": "db-agent",
+      "agentName": "DB Agent",
+      "role": "Persist reviewed governance state when approved",
+      "category": "data",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/db-agent/invoke",
+      "plannedStart": 12,
+      "plannedEnd": 15,
+      "state": "Completed",
+      "executed": true,
+      "output": {
+        "agentId": "db-agent",
+        "output": {
+          "message": "Fallback output because LLM provider is disabled.",
+          "handlerType": "skill-driven-llm",
+          "providerExecution": {
+            "modelUsed": "local-deterministic-handler",
+            "tokensUsed": 0
+          },
+          "agentId": "db-agent",
+          "handledBy": "fallback-handler"
+        },
+        "meta": {
+          "durationMs": 1,
+          "tokensUsed": 0,
+          "modelUsed": "local-deterministic-handler"
+        }
+      }
+    },
+    {
+      "step": 6,
+      "agentId": "reviewer",
+      "agentName": "Code Reviewer",
+      "role": "Check evidence quality and non-destructive safety gates",
+      "category": "worker",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/reviewer/invoke",
+      "plannedStart": 15,
+      "plannedEnd": 18,
+      "state": "Completed",
+      "executed": true,
+      "output": {
+        "agentId": "reviewer",
+        "output": {
+          "message": "Review passed with warnings.",
+          "reviewStatus": "needs_review",
+          "findings": [
+            {
+              "severity": "warn",
+              "title": "Possible credential material",
+              "detail": "Review output before publishing because the payload references credential-like terms."
+            }
+          ],
+          "requiredActions": [
+            "Review warning findings before publishing or notifying users."
+          ],
+          "agentId": "reviewer",
+          "handledBy": "specialized-handler"
+        },
+        "meta": {
+          "durationMs": 1,
+          "tokensUsed": 0,
+          "modelUsed": "local-deterministic-handler"
+        }
+      }
+    },
+    {
+      "step": 7,
+      "agentId": "report-gen",
+      "agentName": "Report Generator",
+      "role": "Create daily governance report from template",
+      "category": "output",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/report-gen/invoke",
+      "plannedStart": 18,
+      "plannedEnd": 21,
+      "state": "Completed",
+      "executed": true,
+      "output": {
+        "agentId": "report-gen",
+        "output": {
+          "message": "Workflow run report generated at 2026-05-26T19:38:42.125Z. Goal: execute. See run data for details.",
+          "report": {
+            "generatedAt": "2026-05-26T19:38:42.125Z",
+            "goal": "execute",
+            "tenantId": "dev",
+            "format": "markdown-operator",
+            "content": "Workflow run report generated at 2026-05-26T19:38:42.125Z. Goal: execute. See run data for details."
+          },
+          "nextActions": [
+            "Route report to notifier for human review notification.",
+            "Archive to reports/workflow-runs/ via logger."
+          ],
+          "providerExecution": {
+            "provider": "local",
+            "status": "disabled",
+            "modelUsed": "local-deterministic-handler",
+            "tokensUsed": 0,
+            "usedRemoteProvider": false
+          },
+          "agentId": "report-gen",
+          "handledBy": "specialized-handler"
+        },
+        "meta": {
+          "durationMs": 1,
+          "tokensUsed": 0,
+          "modelUsed": "local-deterministic-handler"
+        }
+      }
+    },
+    {
+      "step": 8,
+      "agentId": "notifier",
+      "agentName": "Notifier",
+      "role": "Notify human reviewer when approval is required",
+      "category": "output",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/notifier/invoke",
+      "plannedStart": 21,
+      "plannedEnd": 22,
+      "state": "Completed",
+      "executed": true,
+      "output": {
+        "agentId": "notifier",
+        "output": {
+          "message": "Zynx notification: Workflow 'execute' completed. Please review the run report. Tenant: dev.",
+          "notification": {
+            "channel": "default",
+            "recipient": "chatgpt-mcp",
+            "sentAt": "2026-05-26T19:38:42.126Z",
+            "content": "Zynx notification: Workflow 'execute' completed. Please review the run report. Tenant: dev.",
+            "delivered": false
+          },
+          "nextActions": [
+            "Add channel adapter (Slack/email/LINE) in Phase 3 runtime services to set delivered=true."
+          ],
+          "providerExecution": {
+            "provider": "local",
+            "status": "disabled",
+            "modelUsed": "local-deterministic-handler",
+            "tokensUsed": 0,
+            "usedRemoteProvider": false
+          },
+          "agentId": "notifier",
+          "handledBy": "specialized-handler"
+        },
+        "meta": {
+          "durationMs": 1,
+          "tokensUsed": 0,
+          "modelUsed": "local-deterministic-handler"
+        }
+      }
+    },
+    {
+      "step": 9,
+      "agentId": "logger",
+      "agentName": "Logger",
+      "role": "Append audit trail and decision log entries",
+      "category": "output",
+      "mcpTool": "invoke_agent",
+      "backendRoute": "/agents/logger/invoke",
+      "plannedStart": 22,
+      "plannedEnd": 23,
+      "state": "Completed",
+      "executed": true,
+      "output": {
+        "agentId": "logger",
+        "output": {
+          "message": "Fallback output because LLM provider is disabled.",
+          "handlerType": "skill-driven-llm",
+          "providerExecution": {
+            "modelUsed": "local-deterministic-handler",
+            "tokensUsed": 0
+          },
+          "agentId": "logger",
+          "handledBy": "fallback-handler"
+        },
+        "meta": {
+          "durationMs": 1,
+          "tokensUsed": 0,
+          "modelUsed": "local-deterministic-handler"
+        }
+      }
+    }
+  ],
+  "nextActions": [
+    "Review completed step outputs and replace backend stubs with real agent implementations where needed.",
+    "Map specialized agent behavior behind each backend route.",
+    "Promote approved workflows into scheduled governance or production runbooks."
+  ]
+}

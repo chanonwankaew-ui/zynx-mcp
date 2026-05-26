@@ -28,7 +28,7 @@ const workflowPath = workflowId
   : positionalPath ?? defaultWorkflowPath;
 
 const input = (execute ? "execute" : "dry-run");
-const backendBaseUrl = (process.env.ZYNX_API_BASE_URL ?? "http://localhost:8787").replace(/\/$/, "");
+const backendBaseUrl = (process.env.ZYNX_API_BASE_URL || "http://localhost:8787").replace(/\/$/, "");
 
 function serviceHeaders() {
   const headers: Record<string, string> = {

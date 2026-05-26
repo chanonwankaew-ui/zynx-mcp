@@ -261,11 +261,17 @@ app.post("/agents/:agentId/invoke", async (req, res) => {
     assertRole(meta, auth.roles);
 
     // Execute
+    const providerConfig = getProviderConfig(req) || {};
+    if (payload.options?.timeoutMs !== undefined) {
+      providerConfig.timeoutMs = payload.options.timeoutMs;
+    }
+
     const result = await invokeAgentHandler(agentId, payload.input, {
       tenantId: auth.tenantId,
       userId: auth.userId,
-      providerConfig: getProviderConfig(req),
-      traceId: auth.traceId
+      providerConfig,
+      traceId: auth.traceId,
+      options: payload.options
     });
     const durationMs = Date.now() - startMs;
 
@@ -286,6 +292,7 @@ app.post("/agents/:agentId/invoke", async (req, res) => {
     res.json({
       agentId,
       sessionId: payload.sessionId,
+      traceId: auth.traceId,
       output: result.output,
       meta: {
         durationMs,

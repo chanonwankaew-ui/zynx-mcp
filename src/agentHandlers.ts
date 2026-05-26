@@ -13,6 +13,10 @@ export type AgentInvocationContext = {
   userId: string;
   traceId?: string;
   providerConfig?: ProviderRuntimeConfig;
+  options?: {
+    timeoutMs?: number;
+    maxTokens?: number;
+  };
 };
 
 export type AgentHandlerResult = {
@@ -229,7 +233,7 @@ async function taskPlannerHandler(input: Record<string, unknown>, ctx: AgentInvo
       }))
     }),
     fallbackText: `Planned ${agents.length} registry-backed Zynx workflow steps. ${fileContext ? "Contextualized by workspace file." : ""}`,
-    maxOutputTokens: 240,
+    maxOutputTokens: ctx.options?.maxTokens ?? 240,
     metadata: {
       agent_id: "task-planner",
       tenant_id: ctx.tenantId,
@@ -293,7 +297,7 @@ async function deejaHandler(input: Record<string, unknown>, ctx: AgentInvocation
       userId: ctx.userId
     }),
     fallbackText: fallbackMessage,
-    maxOutputTokens: 220,
+    maxOutputTokens: ctx.options?.maxTokens ?? 220,
     metadata: {
       agent_id: "deeja",
       tenant_id: ctx.tenantId,
@@ -527,7 +531,7 @@ async function orchestratorHandler(input: Record<string, unknown>, ctx: AgentInv
     ].join(" "),
     input: JSON.stringify({ goal, preferredAgents, tenantId: ctx.tenantId }),
     fallbackText: `Orchestrating workflow for goal: ${goal.slice(0, 120)}. Routing to task-planner for decomposition.`,
-    maxOutputTokens: 180,
+    maxOutputTokens: ctx.options?.maxTokens ?? 180,
     metadata: { agent_id: "orchestrator", tenant_id: ctx.tenantId },
     runtime: ctx.providerConfig
   });
@@ -563,7 +567,7 @@ async function dataIngestHandler(input: Record<string, unknown>, ctx: AgentInvoc
     ].join(" "),
     input: JSON.stringify({ goal, dataSummary, tenantId: ctx.tenantId }),
     fallbackText: `Data ingestion: received payload for goal '${goal.slice(0, 80)}'. Fields extracted and staged for downstream agents.`,
-    maxOutputTokens: 220,
+    maxOutputTokens: ctx.options?.maxTokens ?? 220,
     metadata: { agent_id: "data-ingest", tenant_id: ctx.tenantId },
     runtime: ctx.providerConfig
   });
@@ -603,7 +607,7 @@ async function reportGenHandler(input: Record<string, unknown>, ctx: AgentInvoca
     ].join(" "),
     input: JSON.stringify({ goal, runSummary, tenantId: ctx.tenantId, ts }),
     fallbackText: `Workflow run report generated at ${ts}. Goal: ${goal.slice(0, 80)}. See run data for details.`,
-    maxOutputTokens: 280,
+    maxOutputTokens: ctx.options?.maxTokens ?? 280,
     metadata: { agent_id: "report-gen", tenant_id: ctx.tenantId },
     runtime: ctx.providerConfig
   });
@@ -642,7 +646,7 @@ async function notifierHandler(input: Record<string, unknown>, ctx: AgentInvocat
     ].join(" "),
     input: JSON.stringify({ goal, channel, recipient: recipientHint, reportContent: reportContent.slice(0, 300) }),
     fallbackText: `Zynx notification: Workflow '${goal.slice(0, 60)}' completed. Please review the run report. Tenant: ${ctx.tenantId}.`,
-    maxOutputTokens: 160,
+    maxOutputTokens: ctx.options?.maxTokens ?? 160,
     metadata: { agent_id: "notifier", tenant_id: ctx.tenantId, channel },
     runtime: ctx.providerConfig
   });
@@ -678,6 +682,7 @@ async function fallbackHandler(agentId: string, input: Record<string, unknown>, 
       instructions: systemPrompt,
       input: userPrompt,
       fallbackText: "Fallback output because LLM provider is disabled.",
+      maxOutputTokens: ctx.options?.maxTokens,
       runtime: ctx.providerConfig
     });
     
