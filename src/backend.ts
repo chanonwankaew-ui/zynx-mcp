@@ -4,7 +4,7 @@ import cors from "cors";
 import path from "node:path";
 import fs from "node:fs";
 import { fileURLToPath } from "node:url";
-import { agentBackendPort } from "./config.js";
+import { agentBackendPort, listenHost } from "./config.js";
 import { AGENT_REGISTRY, type AgentMeta, findAgent } from "./agentRegistry.js";
 import { invokeAgentHandler } from "./agentHandlers.js";
 import { validateWorkflowContract } from "./workflowSchema.js";
@@ -12,11 +12,18 @@ import { getProviderStatus } from "./providerClient.js";
 import type { ProviderRuntimeConfig } from "./providerClient.js";
 import { describeCorsOrigins, zynxCorsOptions } from "./corsConfig.js";
 
-const app = express();
+export const app = express();
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 app.use(cors(zynxCorsOptions()));
-app.use(express.json());
+const parseJsonBody = express.json();
+app.use((req, res, next) => {
+  if (req.body !== undefined) {
+    next();
+    return;
+  }
+  parseJsonBody(req, res, next);
+});
 
 // ─── Middleware ───────────────────────────────────────────────────────────────
 
@@ -187,7 +194,7 @@ function auditLog(event: {
   provider?: string;
   model?: string;
 }) {
-  console.log(JSON.stringify({ ts: new Date().toISOString(), ...event }));
+  console.error(JSON.stringify({ ts: new Date().toISOString(), ...event }));
 }
 
 // ─── Routes ───────────────────────────────────────────────────────────────────
@@ -500,15 +507,23 @@ app.post("/tools/test", async (req, res) => {
 
 // ─── Start Server ──────────────────────────────────────────────────────────────
 
-app.listen(agentBackendPort, () => {
-  console.log(`🤖 Zynx Agent Backend`);
-  console.log(`   Port: ${agentBackendPort}`);
-  console.log(`   Health:         http://localhost:${agentBackendPort}/health`);
-  console.log(`   Agents:         http://localhost:${agentBackendPort}/agents`);
-  console.log(`   Invoke:         POST http://localhost:${agentBackendPort}/agents/:agentId/invoke`);
-  console.log(`   Agent Health:   GET  http://localhost:${agentBackendPort}/agents/:agentId/health`);
-  console.log(`   Workflow Runs:  GET  http://localhost:${agentBackendPort}/workflow/runs`);
-  console.log(`   WF Validate:    POST http://localhost:${agentBackendPort}/workflow/validate`);
-  console.log(`   Provider:       GET  http://localhost:${agentBackendPort}/provider/status`);
-  console.log(`   CORS origin:    ${describeCorsOrigins()}`);
-});
+export function startBackendServer() {
+  return app.listen(agentBackendPort, listenHost, () => {
+    console.error("Server listening on", agentBackendPort);
+    console.error(`Zynx Agent Backend`);
+    console.error(`   Host: ${listenHost}`);
+    console.error(`   Port: ${agentBackendPort}`);
+    console.error(`   Health:         http://${listenHost}:${agentBackendPort}/health`);
+    console.error(`   Agents:         http://${listenHost}:${agentBackendPort}/agents`);
+    console.error(`   Invoke:         POST http://${listenHost}:${agentBackendPort}/agents/:agentId/invoke`);
+    console.error(`   Agent Health:   GET  http://${listenHost}:${agentBackendPort}/agents/:agentId/health`);
+    console.error(`   Workflow Runs:  GET  http://${listenHost}:${agentBackendPort}/workflow/runs`);
+    console.error(`   WF Validate:    POST http://${listenHost}:${agentBackendPort}/workflow/validate`);
+    console.error(`   Provider:       GET  http://${listenHost}:${agentBackendPort}/provider/status`);
+    console.error(`   CORS origin:    ${describeCorsOrigins()}`);
+  });
+}
+
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  startBackendServer();
+}

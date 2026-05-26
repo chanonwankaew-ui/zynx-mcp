@@ -1,0 +1,38 @@
+id,name,status,tenant_scope,allowed_roles,role,category,color,estimated_duration,mcp_tool,backend_route,is_active
+orchestrator,Zynx Orchestrator,published,global,user;admin,Master coordinator,core,#7F77DD,2,invoke_agent,/agents/orchestrator/invoke,true
+task-planner,Task Planner,published,global,user;admin,Job decomposer,core,#7F77DD,3,invoke_agent,/agents/task-planner/invoke,true
+router,LLM Router,published,global,user;admin,Model selector,core,#7F77DD,1,invoke_agent,/agents/router/invoke,true
+memory,Memory Manager,published,global,user;admin,Context store,core,#7F77DD,2,invoke_agent,/agents/memory/invoke,true
+scheduler,Job Scheduler,published,global,user;admin,Cron & queue manager,core,#7F77DD,2,invoke_agent,/agents/scheduler/invoke,true
+auth,Auth Guard,published,global,user;admin,JWT / RBAC enforcement,core,#7F77DD,1,invoke_agent,/agents/auth/invoke,true
+deeja,Deeja,published,global,user;admin,Thai UI agent,ui,#1D9E75,3,invoke_agent,/agents/deeja/invoke,true
+dashboard-ui,Dashboard Agent,published,global,user;admin,Renders master dashboard,ui,#1D9E75,4,invoke_agent,/agents/dashboard-ui/invoke,true
+form-builder,Form Builder,published,global,user;admin,Dynamic form generator,ui,#1D9E75,3,invoke_agent,/agents/form-builder/invoke,true
+chat-ui,Chat Interface,published,global,user;admin,Conversational UI layer,ui,#1D9E75,2,invoke_agent,/agents/chat-ui/invoke,true
+frontend-designer,Frontend Designer,published,global,user;admin,High-quality UI Coder,ui,#1D9E75,5,invoke_agent,/agents/frontend-designer/invoke,true
+data-ingest,Data Ingestion,published,global,user;admin,ETL pipeline,data,#378ADD,5,invoke_agent,/agents/data-ingest/invoke,true
+validator,Schema Validator,published,global,user;admin,Zod / JSON Schema check,data,#378ADD,2,invoke_agent,/agents/validator/invoke,true
+transformer,Data Transformer,published,global,user;admin,Shape & map payloads,data,#378ADD,3,invoke_agent,/agents/transformer/invoke,true
+vector-store,Vector Store,published,global,user;admin,Embedding & retrieval,data,#378ADD,4,invoke_agent,/agents/vector-store/invoke,true
+db-agent,DB Agent,published,global,user;admin,PostgreSQL / multi-tenant,data,#378ADD,3,invoke_agent,/agents/db-agent/invoke,true
+cache,Cache Agent,published,global,user;admin,Redis layer,data,#378ADD,1,invoke_agent,/agents/cache/invoke,true
+workflow-mapper,Workflow Mapper,published,global,user;admin,Platform implementation mapping,worker,#3B6D11,5,invoke_agent,/agents/workflow-mapper/invoke,true
+code-gen,Code Generator,published,global,user;admin,TypeScript / Python,worker,#3B6D11,6,invoke_agent,/agents/code-gen/invoke,true
+doc-writer,Doc Writer,published,global,user;admin,OpenAPI / Markdown,worker,#3B6D11,4,invoke_agent,/agents/doc-writer/invoke,true
+reviewer,Code Reviewer,published,global,user;admin,Quality & lint check,worker,#3B6D11,3,invoke_agent,/agents/reviewer/invoke,true
+test-gen,Test Generator,published,global,user;admin,Unit & integration tests,worker,#3B6D11,4,invoke_agent,/agents/test-gen/invoke,true
+refactor,Refactor Agent,published,global,user;admin,Code improvement,worker,#3B6D11,3,invoke_agent,/agents/refactor/invoke,true
+api-builder,API Builder,published,global,user;admin,REST / GraphQL scaffolder,worker,#3B6D11,5,invoke_agent,/agents/api-builder/invoke,true
+prompt-eng,Prompt Engineer,published,global,user;admin,Prompt optimization,worker,#3B6D11,2,invoke_agent,/agents/prompt-eng/invoke,true
+rag-agent,RAG Agent,published,global,user;admin,Retrieval-augmented gen,worker,#3B6D11,4,invoke_agent,/agents/rag-agent/invoke,true
+sales-bot,Sales Bot,published,global,user;admin,CRM & lead scoring,biz,#D85A30,4,invoke_agent,/agents/sales-bot/invoke,true
+hr-agent,HR Agent,published,global,user;admin,Recruitment & onboarding,biz,#D85A30,5,invoke_agent,/agents/hr-agent/invoke,true
+finance-agent,Finance Agent,published,global,user;admin,Invoicing & reporting,biz,#D85A30,4,invoke_agent,/agents/finance-agent/invoke,true
+ops-agent,Ops Agent,published,global,user;admin,Infra & deployment ops,biz,#D85A30,3,invoke_agent,/agents/ops-agent/invoke,true
+marketing,Marketing Agent,published,global,user;admin,Campaign automation,biz,#D85A30,5,invoke_agent,/agents/marketing/invoke,true
+support-bot,Support Bot,published,global,user;admin,Customer helpdesk,biz,#D85A30,3,invoke_agent,/agents/support-bot/invoke,true
+touchscreen,Touchscreen Operator,published,global,user;admin,Kiosk / POS interface,biz,#D85A30,2,invoke_agent,/agents/touchscreen/invoke,true
+notifier,Notifier,published,global,user;admin,Slack / email / LINE,output,#185FA5,1,invoke_agent,/agents/notifier/invoke,true
+logger,Logger,published,global,user;admin,Audit trail,output,#5F5E5A,1,invoke_agent,/agents/logger/invoke,true
+report-gen,Report Generator,published,global,user;admin,PDF / Excel output,output,#185FA5,3,invoke_agent,/agents/report-gen/invoke,true
+webhook,Webhook Dispatcher,published,global,user;admin,External event push,output,#185FA5,1,invoke_agent,/agents/webhook/invoke,true

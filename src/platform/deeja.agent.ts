@@ -44,7 +44,7 @@ export class DeejaAgent {
           return { success: false, error: `DeejaAgent failed after ${this.maxRetries} retries. Last error: ${err.message}` };
         }
         const delay = this.baseDelay * Math.pow(2, attempt - 1);
-        console.log(`[DeejaAgent] Parsing failed (${err.message}), retrying in ${delay}ms...`);
+        console.error(`[DeejaAgent] Parsing failed (${err.message}), retrying in ${delay}ms...`);
         await sleep(delay);
       }
     }

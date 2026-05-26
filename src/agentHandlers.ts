@@ -190,7 +190,7 @@ async function taskPlannerHandler(input: Record<string, unknown>, ctx: AgentInvo
   const goal = getGoal(input);
   const traceId = ctx.traceId || "no-trace";
   const agents = uniqueAgentIds(plannedAgentIdsForGoal(goal, input)).map(agentStep);
-  console.log(`[Agent][${traceId}] task-planner: Planned ${agents.length} agents for goal: ${goal.slice(0, 50)}...`);
+  console.error(`[Agent][${traceId}] task-planner: Planned ${agents.length} agents for goal: ${goal.slice(0, 50)}...`);
   const workflowId = slugWorkflowName(stringify(input.workflowId) || goal);
   const workflowFile = createWorkflowFile({
     id: workflowId,
@@ -207,7 +207,7 @@ async function taskPlannerHandler(input: Record<string, unknown>, ctx: AgentInvo
     const content = readWorkspaceFile(filePath);
     if (content) {
       fileContext = `FILE CONTENT (${filePath}):\n${content.slice(0, 4000)}`;
-      console.log(`[Agent][${traceId}] task-planner: Read ${filePath} for context (${content.length} bytes)`);
+      console.error(`[Agent][${traceId}] task-planner: Read ${filePath} for context (${content.length} bytes)`);
     }
   }
 
@@ -259,7 +259,7 @@ async function taskPlannerHandler(input: Record<string, unknown>, ctx: AgentInvo
 async function deejaHandler(input: Record<string, unknown>, ctx: AgentInvocationContext): Promise<Record<string, unknown>> {
   const goal = getGoal(input);
   const traceId = ctx.traceId || "no-trace";
-  console.log(`[Agent][${traceId}] deeja: Generating response for goal: ${goal.slice(0, 50)}...`);
+  console.error(`[Agent][${traceId}] deeja: Generating response for goal: ${goal.slice(0, 50)}...`);
   const context = asRecord(input.context);
   const rawResult = input.result ?? input.output ?? context.result ?? context.output ?? input;
   const hasThai = /[\u0E00-\u0E7F]/.test(goal) || /[\u0E00-\u0E7F]/.test(JSON.stringify(rawResult));
@@ -273,7 +273,7 @@ async function deejaHandler(input: Record<string, unknown>, ctx: AgentInvocation
     const content = readWorkspaceFile(filePath);
     if (content) {
       fileContext = `WORKSPACE FILE (${filePath}):\n${content.slice(0, 3000)}`;
-      console.log(`[Agent][${traceId}] deeja: Read ${filePath} for user-facing response context.`);
+      console.error(`[Agent][${traceId}] deeja: Read ${filePath} for user-facing response context.`);
     }
   }
 

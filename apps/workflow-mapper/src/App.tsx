@@ -4,10 +4,14 @@ import { AGENTS, agentById } from "./agentCatalog";
 
 const ZYNX_BACKEND_URL = import.meta.env.VITE_BACKEND_URL ?? "http://localhost:8790";
 const ZYNX_MCP_URL = import.meta.env.VITE_MCP_URL ?? "http://localhost:3000";
+const ZYNX_PUBLIC_APP_URL = (import.meta.env.VITE_PUBLIC_APP_URL ?? "https://mcp-agent--wankaewchanont.replit.app").replace(/\/$/, "");
 
 const SERVICE_TARGETS = [
   { id: "backend", label: "Backend", url: ZYNX_BACKEND_URL, healthUrl: `${ZYNX_BACKEND_URL}/health` },
   { id: "mcp", label: "MCP", url: `${ZYNX_MCP_URL}/mcp`, healthUrl: `${ZYNX_MCP_URL}/health` },
+  { id: "public-mcp", label: "Zynx MCP", url: ZYNX_PUBLIC_APP_URL, external: true },
+  { id: "deeja", label: "Deeja", url: `${ZYNX_PUBLIC_APP_URL}/deeja/`, external: true },
+  { id: "agency", label: "Agency", url: `${ZYNX_PUBLIC_APP_URL}/agency/`, external: true },
   { id: "planner", label: "Planner", url: window.location.origin, healthUrl: window.location.href }
 ];
 
@@ -19,6 +23,14 @@ function emptyServiceStatus() {
 }
 
 async function checkService(service) {
+  if (service.external) {
+    return {
+      state: "external",
+      message: "Open",
+      latencyMs: null
+    };
+  }
+
   const start = performance.now();
   try {
     const res = await fetch(service.healthUrl, {
@@ -41,10 +53,10 @@ async function checkService(service) {
 
 function ServiceStatusBar({ status, onRefresh }) {
   return (
-    <div style={{display:"flex", alignItems:"center", gap:8, minWidth:0}}>
+    <div style={{display:"flex", alignItems:"center", justifyContent:"center", flexWrap:"wrap", gap:8, minWidth:0}}>
       {SERVICE_TARGETS.map(service => {
         const item = status[service.id] || { state: "checking", message: "Checking", latencyMs: null };
-        const color = item.state === "ok" ? "var(--accent-teal)" : item.state === "checking" ? "#f59e0b" : "#ef4444";
+        const color = item.state === "ok" ? "var(--accent-teal)" : item.state === "checking" ? "#f59e0b" : item.state === "external" ? "var(--text-secondary)" : "#ef4444";
         return (
           <a
             key={service.id}

@@ -70,21 +70,23 @@ docs/runbooks/ide-mcp-setup.md
 ```bash
 npm install
 cp .env.example .env
-npm run dev:backend
-npm run dev:http
+npm run dev
 ```
 
 Default local URLs:
 
 ```text
 MCP wrapper: http://localhost:3000/mcp
-Agent backend: http://localhost:8787
+SSE transport: http://localhost:3000/sse
+Agent routes: http://localhost:3000/agents
+Health: http://localhost:3000/health
 ```
 
 ## Common Commands
 
 ```bash
 npm run build
+npm start
 npm run start:http
 npm run start:backend
 npm run workflow:dev
@@ -100,7 +102,7 @@ npm run governance:run
 MCP_PORT=3000
 MCP_PATH=/mcp
 ZYNX_BACKEND_PORT=8787
-ZYNX_API_BASE_URL=http://localhost:8787
+ZYNX_API_BASE_URL=
 ZYNX_SERVICE_TOKEN=
 ZYNX_DEFAULT_TENANT_ID=dev
 ZYNX_DEFAULT_USER_ID=chatgpt-mcp

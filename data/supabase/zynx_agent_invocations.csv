@@ -1,0 +1,2 @@
+id,agent_id,workflow_run_id,tenant_id,user_id,trace_id,status_code,duration_ms,tokens_used,model_used,input_json,output_json,created_at
+sample-invocation-001,deeja,,dev,chatgpt-mcp,tr-sample,200,42,0,local-deterministic-handler,"{""goal"":""สวัสดี Deeja""}","{""message"":""sample only""}",2026-05-26T15:46:21.030Z

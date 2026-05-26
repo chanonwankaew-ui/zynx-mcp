@@ -3,7 +3,7 @@
   "app_info": {
     "display_name": "Zynx-MCP",
     "subtitle": "Plan agent workflows",
-    "description": "Zynx-MCP helps users inspect a Zynx agent registry, check agent health, and invoke registry-backed agents to plan, review, validate, and execute local agent workflow tasks through ChatGPT.",
+    "description": "Zynx-MCP helps users inspect a Zynx agent registry, check agent health, and invoke registry-backed agents to plan, review, validate, and execute local agent workflow tasks through ChatGPT. It only interacts with the configured Zynx backend upon user request and does not publish to third-party services or modify public internet state. Supports multilingual prompts for summaries (e.g., Thai, Spanish) when supported by the target agent.",
     "category": "DEVELOPER_TOOLS"
   },
   "tools": {
@@ -92,6 +92,40 @@
       "tools_triggered": "invoke_agent",
       "expected_output": "Invokes reviewer and returns review findings, blockers, warnings, and recommended next steps.",
       "expected_output_url": null
+    },
+    {
+      "description": "Validate a workflow JSON via attachment.",
+      "user_prompt": "Validate this workflow JSON file.",
+      "file_attachment_urls": [
+        "https://example.com/workflow.json"
+      ],
+      "tools_triggered": "invoke_agent",
+      "expected_output": "Invokes validator and returns pass, warn, or fail with line/field references and route mapping status.",
+      "expected_output_url": null
+    },
+    {
+      "description": "Health check for an unknown agent ID.",
+      "user_prompt": "Check whether the FooBar agent is online.",
+      "file_attachment_urls": null,
+      "tools_triggered": "get_agent_health",
+      "expected_output": "Returns a not-found or invalid-agent error with guidance to use list_agents to discover valid IDs.",
+      "expected_output_url": null
+    },
+    {
+      "description": "Handle backend timeout gracefully during review.",
+      "user_prompt": "Ask the reviewer to analyze this workflow now.",
+      "file_attachment_urls": null,
+      "tools_triggered": "invoke_agent",
+      "expected_output": "Returns a graceful error indicating the backend is unavailable or timed out, with a suggestion to retry or use list_agents/get_agent_health for diagnostics.",
+      "expected_output_url": null
+    },
+    {
+      "description": "Invoke Deeja for a Spanish workflow summary.",
+      "user_prompt": "Pídele a Deeja que resuma el estado de las ejecuciones de workflow de hoy en español.",
+      "file_attachment_urls": null,
+      "tools_triggered": "invoke_agent",
+      "expected_output": "Invokes Deeja and returns a Spanish user-facing summary with appropriate Zynx context.",
+      "expected_output_url": null
     }
   ],
   "negative_test_cases": [
@@ -125,6 +159,30 @@
       "file_attachment_urls": null,
       "tools_triggered": null,
       "expected_output": "The app should not be invoked because the MCP tools do not delete repositories or perform destructive file management.",
+      "expected_output_url": null
+    },
+    {
+      "description": "Do not trigger for web scraping or crawling.",
+      "user_prompt": "Crawl example.com and extract all pages.",
+      "file_attachment_urls": null,
+      "tools_triggered": null,
+      "expected_output": "The app should not be invoked because it does not perform web scraping or open-world operations.",
+      "expected_output_url": null
+    },
+    {
+      "description": "Do not trigger for posting to third-party services.",
+      "user_prompt": "Post the workflow report to Slack and Twitter.",
+      "file_attachment_urls": null,
+      "tools_triggered": null,
+      "expected_output": "The app should not be invoked because it does not publish to third-party services.",
+      "expected_output_url": null
+    },
+    {
+      "description": "Do not trigger for agent registry deletion or modification.",
+      "user_prompt": "Delete the Deeja agent from the registry.",
+      "file_attachment_urls": null,
+      "tools_triggered": null,
+      "expected_output": "The app should not be invoked because the MCP tools do not delete or modify the agent registry.",
       "expected_output_url": null
     }
   ]

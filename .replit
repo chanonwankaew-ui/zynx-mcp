@@ -1,0 +1,11 @@
+entrypoint = "src/index.ts"
+modules = ["nodejs-22"]
+run = "npm run dev"
+
+[deployment]
+build = ["sh", "-c", "npm ci && npm run build"]
+run = ["sh", "-c", "npm run start"]
+
+[[ports]]
+localPort = 3000
+externalPort = 80

@@ -10,10 +10,12 @@ function numberFromEnv(name: string, fallback: number) {
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
-export const mcpHttpPort = numberFromEnv("MCP_PORT", numberFromEnv("PORT", 3000));
-export const agentBackendPort = numberFromEnv("ZYNX_BACKEND_PORT", numberFromEnv("PORT", 8787));
+export const mcpHttpPort = numberFromEnv("PORT", numberFromEnv("MCP_PORT", 3000));
+export const agentBackendPort = numberFromEnv("PORT", numberFromEnv("ZYNX_BACKEND_PORT", 8787));
 export const mcpPath = process.env.MCP_PATH || "/mcp";
 export const mcpHost = process.env.MCP_HOST || "0.0.0.0";
+export const listenHost = "0.0.0.0";
+export const zynxApiBaseUrl = (process.env.ZYNX_API_BASE_URL || `http://127.0.0.1:${mcpHttpPort}`).replace(/\/$/, "");
 export const mcpAllowedHosts = process.env.MCP_ALLOWED_HOSTS
   ? process.env.MCP_ALLOWED_HOSTS.split(",").map((host) => host.trim()).filter(Boolean)
   : (process.env.NODE_ENV === "production" ? undefined : ["localhost", "127.0.0.1"]);

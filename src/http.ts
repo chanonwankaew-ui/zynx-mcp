@@ -5,9 +5,9 @@ import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/
 import { randomUUID } from "node:crypto";
 import type { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
 import cors from "cors";
-import express, { type Request, type Response } from "express";
 import { createZynxMcpServer } from "./mcpServer.js";
-import { mcpAllowedHosts, mcpHost, mcpHttpPort, mcpPath, sslCertPath, sslKeyPath } from "./config.js";
+import { app as backendApp } from "./backend.js";
+import { listenHost, mcpAllowedHosts, mcpHost, mcpHttpPort, mcpPath, sslCertPath, sslKeyPath } from "./config.js";
 import { zynxCorsOptions } from "./corsConfig.js";
 import https from "node:https";
 import fs from "node:fs";
@@ -28,30 +28,6 @@ const transports = new Map<string, Transport>();
 app.get("/", (_req, res) => {
   res.sendFile(path.join(repoRoot, "zynx-mcp-dashboard.html"));
 });
-
-// Proxy for Backend API (running internally on 8787)
-// Using app.use() with a path prefix - compatible with all Express / path-to-regexp versions
-async function proxyToBackend(req: Request, res: Response) {
-  const targetUrl = `http://localhost:8787${req.originalUrl}`;
-  try {
-    const response = await fetch(targetUrl, {
-      method: req.method,
-      headers: {
-        ...req.headers as Record<string, string>,
-        host: 'localhost:8787'
-      },
-      body: ['POST', 'PUT', 'PATCH'].includes(req.method) ? JSON.stringify(req.body) : undefined
-    });
-    const data = await response.json();
-    res.status(response.status).json(data);
-  } catch (error) {
-    res.status(500).json({ error: 'Backend unreachable', message: (error as Error).message });
-  }
-}
-
-app.use('/agents', proxyToBackend);
-app.use('/workflow', proxyToBackend);
-app.use('/provider', proxyToBackend);
 
 app.get("/health", (_req, res) => {
   res.json({
@@ -85,12 +61,16 @@ app.all(mcpPath, async (req, res) => {
       transport = existingTransport;
     } else if (req.method === "POST") {
       transport = new StreamableHTTPServerTransport({
-        sessionIdGenerator: () => randomUUID()
+        sessionIdGenerator: () => randomUUID(),
+        onsessioninitialized: (initializedSessionId) => {
+          if (transport) {
+            transports.set(initializedSessionId, transport);
+          }
+        },
+        onsessionclosed: (closedSessionId) => {
+          transports.delete(closedSessionId);
+        }
       });
-
-      if (transport.sessionId) {
-        transports.set(transport.sessionId, transport);
-      }
 
       transport.onclose = () => {
         if (transport?.sessionId) {
@@ -157,6 +137,8 @@ app.post("/messages", async (req, res) => {
   await transport.handlePostMessage(req, res, req.body);
 });
 
+app.use(backendApp);
+
 // Start Server with optional HTTPS
 function startServer() {
   const isHttps = sslKeyPath && sslCertPath && fs.existsSync(sslKeyPath) && fs.existsSync(sslCertPath);
@@ -168,17 +150,19 @@ function startServer() {
       }, app)
     : http.createServer(app);
 
-  server.listen(mcpHttpPort, () => {
+  server.listen(mcpHttpPort, listenHost, () => {
     const protocol = isHttps ? "https" : "http";
-    console.log(`🤖 Zynx MCP Wrapper Server (${isHttps ? "Secure HTTPS" : "Standard HTTP"} Mode)`);
-    console.log(`   Port: ${mcpHttpPort}`);
-    console.log(`   Host: ${mcpHost}`);
+    console.error("Server listening on", mcpHttpPort);
+    console.error(`Zynx MCP Wrapper Server (${isHttps ? "Secure HTTPS" : "Standard HTTP"} Mode)`);
+    console.error(`   Port: ${mcpHttpPort}`);
+    console.error(`   Host: ${listenHost}`);
+    console.error(`   MCP host policy: ${mcpHost}`);
     if (mcpAllowedHosts?.length) {
-      console.log(`   Allowed hosts: ${mcpAllowedHosts.join(", ")}`);
+      console.error(`   Allowed hosts: ${mcpAllowedHosts.join(", ")}`);
     }
-    console.log(`   Health: ${protocol}://localhost:${mcpHttpPort}/health`);
-    console.log(`   MCP: ${protocol}://localhost:${mcpHttpPort}${mcpPath}`);
-    console.log(`   SSE: ${protocol}://localhost:${mcpHttpPort}/sse`);
+    console.error(`   Health: ${protocol}://${listenHost}:${mcpHttpPort}/health`);
+    console.error(`   MCP: ${protocol}://${listenHost}:${mcpHttpPort}${mcpPath}`);
+    console.error(`   SSE: ${protocol}://${listenHost}:${mcpHttpPort}/sse`);
     
     if (!isHttps) {
       console.warn("⚠️  Running in HTTP mode. Cloud AI (Claude/GPTs) will require HTTPS.");

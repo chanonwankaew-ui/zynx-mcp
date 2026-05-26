@@ -10,11 +10,11 @@ const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 export class LLMRouterAgent {
   async routeAndExecute(prompt: string): Promise<AgentResult<string>> {
     // Simulate cost/latency scoring logic
-    console.log(`[LLMRouter] Analyzing prompt for optimal model routing...`);
+    console.error(`[LLMRouter] Analyzing prompt for optimal model routing...`);
     await sleep(200);
     const selectedModel = Math.random() > 0.5 ? "claude-3-haiku" : "gpt-4o-mini";
     
-    console.log(`[LLMRouter] Selected ${selectedModel}. Executing fallback chain if needed.`);
+    console.error(`[LLMRouter] Selected ${selectedModel}. Executing fallback chain if needed.`);
     await sleep(1000); // simulate LLM call
     
     return {
@@ -30,7 +30,7 @@ export class LLMRouterAgent {
  */
 export class RAGAgent {
   async queryWithRerank(query: RAGQuery): Promise<AgentResult<RAGResult>> {
-    console.log(`[RAGAgent] Searching vector store for: ${query.query}`);
+    console.error(`[RAGAgent] Searching vector store for: ${query.query}`);
     await sleep(600); // simulate DB/vector search latency
     
     // Simulate finding documents
@@ -51,7 +51,7 @@ export class RAGAgent {
  */
 export class TaskPlannerAgent {
   async generatePlan(intentId: string, intentContext: string): Promise<AgentResult<TaskPlan>> {
-    console.log(`[TaskPlanner] Generating DAG plan for intent: ${intentContext}`);
+    console.error(`[TaskPlanner] Generating DAG plan for intent: ${intentContext}`);
     await sleep(800); // simulate LLM generating JSON plan
     
     const plan: TaskPlan = {
@@ -94,7 +94,7 @@ export class TaskPlannerAgent {
  */
 export class NotifierAgent {
   async sendNotification(payload: NotificationPayload): Promise<AgentResult<string>> {
-    console.log(`[Notifier] Sending notification via ${payload.channel}...`);
+    console.error(`[Notifier] Sending notification via ${payload.channel}...`);
     await sleep(400); // simulate API call
     
     // Simulate occasional channel failure

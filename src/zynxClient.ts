@@ -1,3 +1,5 @@
+import { zynxApiBaseUrl } from "./config.js";
+
 export type InvokeAgentInput = {
   agentId: string;
   input: Record<string, unknown>;
@@ -24,9 +26,7 @@ export type ListAgentsResult = {
 };
 
 const baseUrl = () => {
-  const value = process.env.ZYNX_API_BASE_URL;
-  if (!value) throw new Error("Missing ZYNX_API_BASE_URL");
-  return value.replace(/\/$/, "");
+  return zynxApiBaseUrl;
 };
 
 const serviceHeaders = () => {

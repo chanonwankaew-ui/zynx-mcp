@@ -142,7 +142,7 @@ async function callAnthropic(request: ProviderTextRequest): Promise<ProviderText
   }
 
   const traceId = request.runtime?.traceId || "no-trace";
-  console.log(`[LLM][${traceId}] Calling Anthropic: ${model}`);
+  console.error(`[LLM][${traceId}] Calling Anthropic: ${model}`);
 
   const response = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
@@ -175,7 +175,7 @@ async function callAnthropic(request: ProviderTextRequest): Promise<ProviderText
     tokensUsed: (body.usage?.input_tokens || 0) + (body.usage?.output_tokens || 0),
     usedRemoteProvider: true
   };
-  console.log(`[LLM][${traceId}] Anthropic success: ${result.tokensUsed} tokens`);
+  console.error(`[LLM][${traceId}] Anthropic success: ${result.tokensUsed} tokens`);
   return result;
 }
 
@@ -192,7 +192,7 @@ async function callStandardOpenAI(request: ProviderTextRequest): Promise<Provide
   }
 
   const traceId = request.runtime?.traceId || "no-trace";
-  console.log(`[LLM][${traceId}] Calling ${runtimeProvider(request.runtime)}: ${model} at ${baseUrl}`);
+  console.error(`[LLM][${traceId}] Calling ${runtimeProvider(request.runtime)}: ${model} at ${baseUrl}`);
 
   const response = await fetch(`${baseUrl}/chat/completions`, {
     method: "POST",
@@ -226,7 +226,7 @@ async function callStandardOpenAI(request: ProviderTextRequest): Promise<Provide
     tokensUsed: body.usage?.total_tokens || 0,
     usedRemoteProvider: true
   };
-  console.log(`[LLM][${traceId}] Provider success: ${result.tokensUsed} tokens`);
+  console.error(`[LLM][${traceId}] Provider success: ${result.tokensUsed} tokens`);
   return result;
 }
 

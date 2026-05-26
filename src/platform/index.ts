@@ -47,7 +47,7 @@ export class ZynxAGIPlatform {
    * Main Process Pipeline
    */
   async process(sessionId: string, input: string): Promise<AgentResult<any>> {
-    console.log(`\n🚀 [Platform] Starting session ${sessionId} for input: "${input}"`);
+    console.error(`\n[Platform] Starting session ${sessionId} for input: "${input}"`);
     
     // 1. NLP Parse via Deeja
     const intentRes = await this.deeja.parseIntent(input);
@@ -55,7 +55,7 @@ export class ZynxAGIPlatform {
       return { success: false, error: `Intent parsing failed: ${intentRes.error}` };
     }
     const intent = intentRes.data;
-    console.log(`[Platform] Intent parsed: ${intent.parsedIntent} (confidence: ${intent.confidence.toFixed(2)})`);
+    console.error(`[Platform] Intent parsed: ${intent.parsedIntent} (confidence: ${intent.confidence.toFixed(2)})`);
 
     // 2. Task Planning
     const planRes = await this.planner.generatePlan(intent.id, intent.parsedIntent);
@@ -63,18 +63,18 @@ export class ZynxAGIPlatform {
       return { success: false, error: `Task planning failed: ${planRes.error}` };
     }
     const plan = planRes.data;
-    console.log(`[Platform] DAG Plan created with ${plan.steps.length} steps.`);
+    console.error(`[Platform] DAG Plan created with ${plan.steps.length} steps.`);
 
     // 3. Orchestrate Execution
-    console.log(`[Platform] Handing over to Orchestrator...`);
+    console.error(`[Platform] Handing over to Orchestrator...`);
     const execRes = await this.orchestrator.executePlan(plan);
     
     if (!execRes.success) {
-      console.log(`❌ [Platform] Execution failed: ${execRes.error}`);
+      console.error(`[Platform] Execution failed: ${execRes.error}`);
       return execRes;
     }
 
-    console.log(`✅ [Platform] Execution complete!`);
+    console.error(`[Platform] Execution complete!`);
     return { success: true, data: execRes.data, metadata: { intent, planId: plan.planId } };
   }
 }

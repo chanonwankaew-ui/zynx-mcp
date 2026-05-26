@@ -1,0 +1,2 @@
+id,agent_id,tenant_id,user_id,trace_id,action,status_code,duration_ms,provider,model,created_at
+sample-audit-001,system,dev,chatgpt-mcp,tr-sample,test_connection:mcp,200,12,,,2026-05-26T15:46:21.031Z

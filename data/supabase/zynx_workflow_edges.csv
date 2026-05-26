@@ -1,0 +1,13 @@
+id,workflow_id,source_agent_id,target_agent_id,edge_order
+auto-data-migra__edge_1,auto-data-migra,orchestrator,validator,1
+auto-data-migra__edge_2,auto-data-migra,validator,reviewer,2
+auto-data-migra__edge_3,auto-data-migra,reviewer,report-gen,3
+auto-data-migra__edge_4,auto-data-migra,report-gen,logger,4
+nightly-governance-validation__edge_1,nightly-governance-validation,orchestrator,data-ingest,1
+nightly-governance-validation__edge_2,nightly-governance-validation,data-ingest,validator,2
+nightly-governance-validation__edge_3,nightly-governance-validation,validator,transformer,3
+nightly-governance-validation__edge_4,nightly-governance-validation,transformer,db-agent,4
+nightly-governance-validation__edge_5,nightly-governance-validation,db-agent,reviewer,5
+nightly-governance-validation__edge_6,nightly-governance-validation,reviewer,report-gen,6
+nightly-governance-validation__edge_7,nightly-governance-validation,report-gen,notifier,7
+nightly-governance-validation__edge_8,nightly-governance-validation,notifier,logger,8

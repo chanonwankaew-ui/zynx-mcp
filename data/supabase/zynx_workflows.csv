@@ -1,0 +1,4 @@
+id,name,goal,color,created_at,schedule_cron,schedule_timezone,context_passing,source_file,status
+auto-data-migra,Auto_data-migra,,#9b5de5,2026-05-02T15:24:36.264Z,,,sequential,workflows/auto-data-migra.json,draft
+nightly-governance-validation,Nightly Governance Validation,"Review repository governance state, classify deltas, analyze duplicates, and publish a human-reviewable daily report.",#185FA5,,0 0 * * *,LOCAL,sequential,workflows/nightly-governance-validation.json,draft
+zynx-developer-mode-build,Zynx Developer Mode Build,"Convert Zynx ecosystem concepts into repo-backed implementation slices, validate the workflow route map, and produce a human-reviewable build report.",#2563EB,,,,sequential,workflows/zynx-developer-mode-build.json,draft
