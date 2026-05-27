@@ -18,7 +18,7 @@
     "blueprint:verify": "scripts/build-blueprint-explorer.sh --verify",
     "governance:validate": "tsx scripts/validate-governance.ts",
     "governance:run": "tsx scripts/run-governance.ts",
-    "start": "node dist/index.js",
+    "start": "tsx src/index.ts",
     "start:http": "node dist/http.js",
     "start:backend": "node dist/backend.js",
     "dev:all": "concurrently -k -n backend,http,vite -c blue,magenta,green \"npm run dev:backend\" \"npm run dev:http\" \"npm run workflow:dev\"",
@@ -28,9 +28,10 @@
     "@intercom/messenger-js-sdk": "^0.0.19",
     "@modelcontextprotocol/sdk": "1.29.0",
     "@rive-app/react-canvas": "^4.28.6",
+    "ai": "^6.0.191",
     "axios": "^1.16.1",
     "cors": "2.8.6",
-    "dotenv": "16.6.1",
+    "dotenv": "^16.6.1",
     "express": "^4.22.2",
     "framer-motion": "^12.40.0",
     "lucide-react": "^1.16.0",
@@ -40,10 +41,10 @@
   "devDependencies": {
     "@types/cors": "2.8.19",
     "@types/express": "5.0.6",
-    "@types/node": "22.19.15",
+    "@types/node": "^22.19.15",
     "@types/uuid": "^10.0.0",
     "concurrently": "^9.2.1",
-    "tsx": "4.21.0",
-    "typescript": "5.9.3"
+    "tsx": "^4.22.3",
+    "typescript": "^5.9.3"
   }
 }

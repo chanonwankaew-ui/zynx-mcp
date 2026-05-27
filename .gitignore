@@ -31,3 +31,5 @@ oracleJdk-26.jdk/
 
 # Stray compiled / generated binaries at root
 /zynx-mcp
+.vercel
+.env*
