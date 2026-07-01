@@ -12,7 +12,7 @@ test("loads safe development defaults", () => {
 test("rejects an MCP path without a leading slash", () => {
   assert.throws(
     () => loadEnvironment({ MCP_PATH: "mcp" }),
-    /MCP_PATH must start with \/ /
+    /MCP_PATH must start with \/$/
   );
 });
 
