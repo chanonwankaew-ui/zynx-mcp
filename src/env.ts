@@ -10,11 +10,20 @@ const OptionalSecret = z.preprocess(
   z.string().min(16).optional()
 );
 
+const ProductionRequiredKeys = [
+  "SESSION_ENCRYPTION_KEY",
+  "OAUTH_ISSUER",
+  "OAUTH_AUDIENCE"
+] as const;
+
 export const EnvironmentSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   PORT: z.coerce.number().int().min(1).max(65535).default(3001),
   PUBLIC_BASE_URL: z.string().url().default("http://localhost:3001"),
-  MCP_PATH: z.string().startsWith("/").default("/mcp"),
+  MCP_PATH: z
+    .string()
+    .refine((value) => value.startsWith("/"), "MCP_PATH must start with /")
+    .default("/mcp"),
   CORS_ALLOWLIST: z.string().default("http://localhost:5173"),
   SUPABASE_URL: OptionalUrl,
   SUPABASE_ANON_KEY: OptionalSecret,
@@ -32,17 +41,12 @@ export const EnvironmentSchema = z.object({
   LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace"]).default("info")
 }).superRefine((env, ctx) => {
   if (env.NODE_ENV === "production") {
-    const required: Array<keyof typeof env> = [
-      "SESSION_ENCRYPTION_KEY",
-      "OAUTH_ISSUER",
-      "OAUTH_AUDIENCE"
-    ];
-    for (const key of required) {
+    for (const key of ProductionRequiredKeys) {
       if (!env[key]) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           path: [key],
-          message: `${String(key)} is required in production`
+          message: `${key} is required in production`
         });
       }
     }
