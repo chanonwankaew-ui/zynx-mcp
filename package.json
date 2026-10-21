@@ -26,7 +26,7 @@
   },
   "dependencies": {
     "@intercom/messenger-js-sdk": "^0.0.19",
-    "@modelcontextprotocol/sdk": "1.29.0",
+    "@modelcontextprotocol/sdk": "1.32.0",
     "@rive-app/react-canvas": "^4.28.6",
     "ai": "^6.0.191",
     "axios": "^1.16.1",
