@@ -37,6 +37,37 @@ app.get("/health", (_req, res) => {
   });
 });
 
+// ─── Ingress Authentication Middleware (Gate 2) ──────────────────────────────
+app.use((req, res, next) => {
+  // Only protect MCP transport endpoints (/mcp, /sse)
+  const isMcpRoute = req.path === mcpPath || req.path === "/sse" || req.path.startsWith(mcpPath + "/");
+  if (!isMcpRoute) {
+    next();
+    return;
+  }
+
+  const expectedToken = process.env.GATEWAY_API_KEY || process.env.MCP_API_KEY || process.env.ZYNX_SERVICE_TOKEN;
+  const isProduction = process.env.NODE_ENV === "production";
+
+  if (expectedToken || isProduction) {
+    if (!expectedToken) {
+      res.status(500).json({ error: "Configuration Error: Ingress authentication token not configured in production" });
+      return;
+    }
+    const authHeader = req.headers.authorization;
+    const apiKey = (req.headers["x-api-key"] as string | undefined) || (req.query?.api_key as string | undefined);
+    let token = apiKey;
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+      token = authHeader.slice(7).trim();
+    }
+    if (!token || token !== expectedToken) {
+      res.status(401).json({ error: "Unauthorized", message: "Valid API key or Bearer token required for MCP transport" });
+      return;
+    }
+  }
+  next();
+});
+
 app.all(mcpPath, async (req, res) => {
   try {
     const sessionId = req.headers["mcp-session-id"] as string | undefined;
