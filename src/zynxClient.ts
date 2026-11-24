@@ -34,8 +34,9 @@ const serviceHeaders = () => {
     "content-type": "application/json"
   };
 
-  if (process.env.ZYNX_SERVICE_TOKEN) {
-    headers.authorization = `Bearer ${process.env.ZYNX_SERVICE_TOKEN}`;
+  const serviceToken = process.env.ZYNX_SERVICE_TOKEN || process.env.ZYNX_INTERNAL_SERVICE_TOKEN;
+  if (serviceToken) {
+    headers.authorization = `Bearer ${serviceToken}`;
   }
 
   if (process.env.ZYNX_DEFAULT_TENANT_ID) {
@@ -45,6 +46,8 @@ const serviceHeaders = () => {
   if (process.env.ZYNX_DEFAULT_USER_ID) {
     headers["x-zynx-user-id"] = process.env.ZYNX_DEFAULT_USER_ID;
   }
+
+  headers["x-zynx-trace-id"] = `tr-${Math.random().toString(36).slice(2, 11)}`;
 
   return headers;
 };
