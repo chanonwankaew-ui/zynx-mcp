@@ -46,14 +46,55 @@ const InvokePayloadSchema = z.object({
   }).optional(),
 });
 
-// ─── Auth Helper ───────────────────────────────────────────────────────────────
+// ─── Auth Helper (Gate 2 Hardened) ──────────────────────────────────────────
 
 function getAuth(req: express.Request) {
-  const tenantId = req.headers["x-zynx-tenant-id"] as string || "dev";
-  const userId = req.headers["x-zynx-user-id"] as string || "anonymous";
-  const roles = (req.headers["x-zynx-roles"] as string || "user").split(",");
-  const traceId = req.headers["x-zynx-trace-id"] as string;
-  return { tenantId, userId, roles, traceId };
+  const traceId = (req.headers["x-zynx-trace-id"] as string) || `tr-${Math.random().toString(36).slice(2, 11)}`;
+
+  // 1. Ingress Token / API Key Validation
+  const authHeader = req.headers.authorization;
+  const apiKeyHeader = req.headers["x-api-key"] as string | undefined;
+  const configuredServiceToken = process.env.ZYNX_SERVICE_TOKEN || process.env.ZYNX_INTERNAL_SERVICE_TOKEN || process.env.GATEWAY_API_KEY;
+
+  let callerToken: string | undefined = apiKeyHeader;
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    callerToken = authHeader.slice(7).trim();
+  }
+
+  const isProduction = process.env.NODE_ENV === "production";
+  const isAuthenticatedService = Boolean(configuredServiceToken && callerToken && callerToken === configuredServiceToken);
+
+  // In production, reject unauthenticated invocations if a service token or gateway key is configured
+  if (isProduction && configuredServiceToken && !isAuthenticatedService) {
+    throw Object.assign(new Error("Unauthorized: Invalid or missing service token"), { status: 401 });
+  }
+
+  // 2. Safe Tenant, User, and Role resolution
+  // Plaintext headers are only trusted if the caller is an authenticated service or in local development
+  let tenantId = "dev";
+  let userId = "anonymous";
+  let roles: string[] = ["viewer"]; // Default least privilege
+
+  if (isAuthenticatedService || !isProduction) {
+    if (typeof req.headers["x-zynx-tenant-id"] === "string" && req.headers["x-zynx-tenant-id"].trim()) {
+      tenantId = req.headers["x-zynx-tenant-id"].trim();
+    }
+    if (typeof req.headers["x-zynx-user-id"] === "string" && req.headers["x-zynx-user-id"].trim()) {
+      userId = req.headers["x-zynx-user-id"].trim();
+    }
+    if (typeof req.headers["x-zynx-roles"] === "string") {
+      const allowedRoles = ["owner", "admin", "engineer", "viewer", "agent", "user"];
+      const parsedRoles = req.headers["x-zynx-roles"]
+        .split(",")
+        .map((r) => r.trim())
+        .filter((r) => allowedRoles.includes(r));
+      if (parsedRoles.length > 0) {
+        roles = parsedRoles;
+      }
+    }
+  }
+
+  return { tenantId, userId, roles, traceId, isAuthenticatedService };
 }
 
 function headerString(req: express.Request, name: string) {
