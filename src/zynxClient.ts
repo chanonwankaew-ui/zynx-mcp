@@ -62,10 +62,22 @@ async function parseJsonResponse(res: Response) {
   }
 
   if (!res.ok) {
-    const message = typeof body === "object" && body && "error" in body
-      ? String((body as { error?: unknown }).error)
-      : `HTTP ${res.status}`;
-    throw new Error(message);
+    let message = `HTTP ${res.status}`;
+    if (typeof body === "object" && body !== null) {
+      const b = body as Record<string, unknown>;
+      // Support RFC 9457 Problem Details (detail / title) as well as legacy error field
+      if (typeof b.detail === "string" && b.detail.trim()) {
+        message = b.detail.trim();
+      } else if ("error" in b && b.error !== undefined && b.error !== null) {
+        message = typeof b.error === "object" ? JSON.stringify(b.error) : String(b.error);
+      } else if (typeof b.title === "string" && b.title.trim()) {
+        message = b.title.trim();
+      }
+    }
+    const err = new Error(message);
+    (err as Record<string, unknown>).status = res.status;
+    (err as Record<string, unknown>).problemDetails = body;
+    throw err;
   }
 
   return body;
