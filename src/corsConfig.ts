@@ -14,8 +14,8 @@ const allowFileOrigin = !isProduction && process.env.ZYNX_ALLOW_FILE_ORIGIN !== 
 // Same-origin from the backend's own port — the dashboard is served by the backend itself,
 // so the browser sends Origin: http://localhost:{port}. Always allow this.
 const selfOrigins = [
-  ,
-  ,
+  `http://localhost:${agentBackendPort}`,
+  `http://127.0.0.1:${agentBackendPort}`,
 ];
 
 function originAllowed(origin: string | undefined) {
@@ -37,7 +37,7 @@ export function zynxCorsOptions(): CorsOptions {
         return;
       }
 
-      callback(new Error());
+      callback(new Error(`CORS origin "${origin}" is not allowed`));
     }
   };
 }
@@ -45,5 +45,5 @@ export function zynxCorsOptions(): CorsOptions {
 export function describeCorsOrigins() {
   const origins = configuredOrigins.length ? configuredOrigins.join(", ") : (isProduction ? "(none configured)" : "*");
   const self = selfOrigins.join(", ");
-  return allowFileOrigin ?  : ;
+  return allowFileOrigin ? `${origins} + ${self} (self) + file:// dev origin` : `${origins} + ${self} (self)`;
 }
