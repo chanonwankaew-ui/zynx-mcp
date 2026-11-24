@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { AGENT_REGISTRY } from "./agentRegistry.js";
 import { getAgentHealth, invokeAgent, listAgents } from "./zynxClient.js";
+import { assertToolPermission } from "./security/permissionPolicy.js";
 
 function jsonText(value: unknown) {
   return {
@@ -152,6 +153,7 @@ export function createZynxMcpServer() {
       destructiveHint: false
     },
     async (args) => {
+      assertToolPermission("invoke_agent");
       const result = await invokeAgent(args);
       return jsonText(result);
     }
@@ -169,6 +171,7 @@ export function createZynxMcpServer() {
       destructiveHint: false
     },
     async (args) => {
+      assertToolPermission("get_agent_health");
       const result = await getAgentHealth(args);
       return jsonText(result);
     }
@@ -184,6 +187,7 @@ export function createZynxMcpServer() {
       destructiveHint: false
     },
     async () => {
+      assertToolPermission("list_agents");
       const result = await listAgents();
       return jsonText(result);
     }
