@@ -670,6 +670,25 @@ async function notifierHandler(input: Record<string, unknown>, ctx: AgentInvocat
 
 async function fallbackHandler(agentId: string, input: Record<string, unknown>, ctx: AgentInvocationContext): Promise<Record<string, unknown>> {
   const meta = registryAgent(agentId);
+
+  // Gate 4: Restrict fallback handler strictly to READ_ONLY operations
+  const goalStr = stringify(input.goal ?? input.task ?? input.message).toLowerCase();
+  const destructiveKeywords = ["delete", "drop", "destroy", "truncate", "purge", "remove", "migrate", "consolidate"];
+  if (destructiveKeywords.some((kw) => goalStr.includes(kw))) {
+    return {
+      message: `Execution blocked by Gate 4 Policy Engine: Fallback agent '${agentId}' is strictly restricted to READ_ONLY mode and cannot execute destructive or write tasks.`,
+      handlerType: "fallback-blocked",
+      executionMode: "READ_ONLY",
+      blocked: true,
+      agent: {
+        id: meta.id,
+        name: meta.name,
+        role: meta.role,
+        category: meta.category
+      }
+    };
+  }
+
   const skillPath = path.join(repoRoot, "docs", "skills", `${agentId}.md`);
   
   if (fs.existsSync(skillPath)) {
@@ -689,6 +708,7 @@ async function fallbackHandler(agentId: string, input: Record<string, unknown>, 
     return {
       message: result.text,
       handlerType: "skill-driven-llm",
+      executionMode: "READ_ONLY",
       providerExecution: {
         modelUsed: result.modelUsed,
         tokensUsed: result.tokensUsed
@@ -699,6 +719,7 @@ async function fallbackHandler(agentId: string, input: Record<string, unknown>, 
   return {
     message: `Executed ${meta.name} through local fallback handler.`,
     handlerType: "fallback",
+    executionMode: "READ_ONLY",
     agent: {
       id: meta.id,
       name: meta.name,
