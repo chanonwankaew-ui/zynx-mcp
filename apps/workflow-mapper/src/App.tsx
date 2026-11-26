@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 import { AGENTS, agentById } from "./agentCatalog";
 
 const ZYNX_BACKEND_URL = import.meta.env.VITE_BACKEND_URL ?? "http://localhost:8790";
@@ -1316,6 +1317,7 @@ ${skillForm.instructions}`;
           to { transform: translateX(0); }
         }
       `}</style>
+      <SpeedInsights />
     </div>
   );
 }
